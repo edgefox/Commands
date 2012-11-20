@@ -21,8 +21,9 @@ public class CommandExecutor implements Runnable {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
-                selectStatement = connection.prepareStatement("select * from commands where status='NEW' limit 3 for update;");
+                selectStatement = connection.prepareStatement("select * from commands where status='NEW' limit 3 for update");
                 updateStatement = connection.prepareStatement("update commands set status=? WHERE id=?");
+
                 ResultSet resultSet = null;
                 while(true) {
                     resultSet =  selectStatement.executeQuery();
@@ -31,19 +32,20 @@ public class CommandExecutor implements Runnable {
                     }
                     while (resultSet.next()) {
                         command = new Command(resultSet.getInt("id"),
-                                              resultSet.getString("name"),
-                                              Command.Status.valueOf(resultSet.getString("status")));
-                        command.execute();
+                                resultSet.getString("name"),
+                                Command.Status.valueOf(resultSet.getString("status")));
+
                         updateStatement.setString(1, Command.Status.IN_PROGRESS.toString());
                         updateStatement.setInt(2, command.getId());
                         updateStatement.execute();
-                        connection.commit();
+
+                        command.execute();
 
                         updateStatement.setString(1, Command.Status.DONE.toString());
                         updateStatement.setInt(2, command.getId());
                         updateStatement.execute();
-                        connection.commit();
                     }
+                    connection.commit();
                 }
             } finally {
                 if (connection != null) {
@@ -53,20 +55,5 @@ public class CommandExecutor implements Runnable {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 10; i++) {
-            executorService.execute(new CommandExecutor());
-        }
-        while (!executorService.isTerminated()){
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted");
-            }
-        }
-        ConnectionPool.getDataSource().close();
     }
 }
