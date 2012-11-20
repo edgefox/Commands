@@ -46,11 +46,18 @@ public class Command implements Runnable  {
 
     public void run() {
         ComboPooledDataSource dataSource = DataPool.getDataSource();
+        Connection connection = null;
         try {
-            System.out.println("executing " + name);
-            Connection connection = dataSource.getConnection();
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("update commands set status='" + Status.DONE + "' where id=" + id);
+            try{
+                System.out.println("executing " + name);
+                connection = dataSource.getConnection();
+                Statement statement = connection.createStatement();
+                statement.executeUpdate("update commands set status='" + Status.DONE + "' where id=" + id);
+            } finally {
+                if (connection != null) {
+                    connection.close();
+                }
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
