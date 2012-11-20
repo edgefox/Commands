@@ -17,7 +17,7 @@ public class CommandExecutor implements Runnable {
 
     @Override
     public void run() {
-        DataSource dataSource = new ComboPooledDataSource();
+        DataSource dataSource = DataPool.getDataSource();
         Connection connection = null;
         PreparedStatement selectStatement = null;
         PreparedStatement updateStatement = null;
@@ -28,7 +28,6 @@ public class CommandExecutor implements Runnable {
                 selectStatement = connection.prepareStatement("select id, name, status from commands " +
                                                               "where status='NEW' limit " + taskLimit + " for update");
                 updateStatement = connection.prepareStatement("update commands set status=? WHERE id=?");
-                ExecutorService executor = Executors.newCachedThreadPool();
                 HashSet<Command> commands = new HashSet<Command>(taskLimit);
                 ResultSet resultSet = null;
                 while(true) {
@@ -48,18 +47,9 @@ public class CommandExecutor implements Runnable {
                     connection.commit();
 
                     for(Command command : commands) {
-                        executor.execute(command);
+                        command.run();
                     }
                     commands.clear();
-                }
-                executor.shutdown();
-
-                while (!executor.isTerminated()) {
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        System.out.println(e.getMessage());
-                    }
                 }
             } finally {
                 if (connection != null) {

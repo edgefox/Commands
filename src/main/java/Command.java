@@ -9,7 +9,7 @@ import java.sql.Statement;
  * Date: 11/15/12
  * Time: 3:06 PM
  */
-public class Command implements Runnable  {
+public class Command {
     private int id;
     private String name;
     public Status status;
@@ -49,10 +49,10 @@ public class Command implements Runnable  {
         Connection connection = null;
         try {
             try{
-                System.out.println("executing " + name);
                 connection = dataSource.getConnection();
                 Statement updateStatement = connection.createStatement();
                 updateStatement.executeUpdate("update commands set status='" + Status.DONE + "' where id=" + id);
+                System.out.println("executing " + name);
             } finally {
                 if (connection != null) {
                     connection.close();
