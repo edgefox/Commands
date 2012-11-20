@@ -1,5 +1,8 @@
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -9,44 +12,46 @@ import java.util.concurrent.Executors;
  * Time: 3:26 PM
  */
 public class CommandExecutor implements Runnable {
+    final static int taskLimit = 3;
 
     @Override
     public void run() {
-        DataSource dataSource = ConnectionPool.getDataSource();
+        DataSource dataSource = new ComboPooledDataSource();
         Connection connection = null;
         PreparedStatement selectStatement = null;
         PreparedStatement updateStatement = null;
-        Command command = null;
         try {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
-                selectStatement = connection.prepareStatement("select * from commands where status='NEW' limit 3 for update");
+                selectStatement = connection.prepareStatement("select * from commands " +
+                                                              "where status='NEW' limit " + taskLimit + " for update");
                 updateStatement = connection.prepareStatement("update commands set status=? WHERE id=?");
-
+                ExecutorService executor = Executors.newCachedThreadPool();
+                HashSet<Command> commands = new HashSet<Command>(taskLimit);
                 ResultSet resultSet = null;
                 while(true) {
                     resultSet =  selectStatement.executeQuery();
-                    if (!resultSet.first()) {
+                    if (!resultSet.isBeforeFirst()) {
                         break;
                     }
+
                     while (resultSet.next()) {
-                        command = new Command(resultSet.getInt("id"),
-                                resultSet.getString("name"),
-                                Command.Status.valueOf(resultSet.getString("status")));
-
+                        commands.add( new Command(resultSet.getInt("id"),
+                                                  resultSet.getString("name"),
+                                                  Command.Status.valueOf(resultSet.getString("status"))) );
                         updateStatement.setString(1, Command.Status.IN_PROGRESS.toString());
-                        updateStatement.setInt(2, command.getId());
-                        updateStatement.execute();
-
-                        command.execute();
-
-                        updateStatement.setString(1, Command.Status.DONE.toString());
-                        updateStatement.setInt(2, command.getId());
-                        updateStatement.execute();
+                        updateStatement.setInt(2, resultSet.getInt("id"));
+                        updateStatement.executeUpdate();
                     }
                     connection.commit();
+
+                    for(Command command : commands) {
+                        executor.execute(command);
+                    }
+                    commands.clear();
                 }
+                executor.shutdown();
             } finally {
                 if (connection != null) {
                     connection.close();

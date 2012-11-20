@@ -5,7 +5,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
  * Date: 11/15/12
  * Time: 5:14 PM
  */
-public class ConnectionPool {
+public class DataPool {
     private static ComboPooledDataSource dataSource;
 
     public static ComboPooledDataSource getDataSource() {

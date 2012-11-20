@@ -40,6 +40,6 @@ public class CommandsTest extends TestCase {
                 System.out.println("Interrupted");
             }
         }
-        ConnectionPool.getDataSource().close();
+        DataPool.getDataSource().close();
     }
 }

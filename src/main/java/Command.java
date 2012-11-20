@@ -1,9 +1,15 @@
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 /**
  * User: Ivan Lyutov
  * Date: 11/15/12
  * Time: 3:06 PM
  */
-public class Command {
+public class Command implements Runnable  {
     private int id;
     private String name;
     public Status status;
@@ -38,8 +44,16 @@ public class Command {
         this.status = status;
     }
 
-    public void execute() {
-        System.out.println("Executing " + name + " with " + Thread.currentThread().getName());
+    public void run() {
+        ComboPooledDataSource dataSource = DataPool.getDataSource();
+        try {
+            System.out.println("executing " + name);
+            Connection connection = dataSource.getConnection();
+            Statement statement = connection.createStatement();
+            statement.executeUpdate("update commands set status='" + Status.DONE + "' where id=" + id);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static enum Status {
