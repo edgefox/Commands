@@ -5,6 +5,7 @@ import java.sql.*;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: Ivan Lyutov
@@ -24,7 +25,7 @@ public class CommandExecutor implements Runnable {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
-                selectStatement = connection.prepareStatement("select * from commands " +
+                selectStatement = connection.prepareStatement("select id, name, status from commands " +
                                                               "where status='NEW' limit " + taskLimit + " for update");
                 updateStatement = connection.prepareStatement("update commands set status=? WHERE id=?");
                 ExecutorService executor = Executors.newCachedThreadPool();
@@ -52,6 +53,14 @@ public class CommandExecutor implements Runnable {
                     commands.clear();
                 }
                 executor.shutdown();
+
+                while (!executor.isTerminated()) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
             } finally {
                 if (connection != null) {
                     connection.close();
