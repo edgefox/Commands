@@ -38,7 +38,11 @@ public class Command {
         this.status = status;
     }
 
-    private static enum Status {
+    public void execute() {
+        System.out.println("Executing " + name + " with " + Thread.currentThread().getName());
+    }
+
+    public static enum Status {
         NEW("NEW"), IN_PROGRESS("IN_PROGRESS"), DONE("DONE");
 
         private String value;
