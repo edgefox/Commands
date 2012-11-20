@@ -28,7 +28,7 @@ public class CommandsTest extends TestCase {
 
     public void testCommands() {
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 50; i++) {
             executorService.execute(new CommandExecutor());
         }
         executorService.shutdown();

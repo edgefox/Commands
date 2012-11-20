@@ -1,11 +1,6 @@
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.HashSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * User: Ivan Lyutov
@@ -13,21 +8,20 @@ import java.util.concurrent.TimeUnit;
  * Time: 3:26 PM
  */
 public class CommandExecutor implements Runnable {
-    final static int taskLimit = 3;
+    final static int taskLimit = 10;
 
     @Override
     public void run() {
         DataSource dataSource = DataPool.getDataSource();
         Connection connection = null;
-        PreparedStatement selectStatement = null;
-        PreparedStatement updateStatement = null;
         try {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
-                selectStatement = connection.prepareStatement("select id, name, status from commands " +
-                                                              "where status='NEW' limit " + taskLimit + " for update");
-                updateStatement = connection.prepareStatement("update commands set status=? WHERE id=?");
+                PreparedStatement selectStatement = connection.prepareStatement("select id, name, status from commands " +
+                                                                                "where status='" + Command.Status.NEW +
+                                                                                "' limit " + taskLimit + " for update");
+                PreparedStatement updateStatement = connection.prepareStatement("update commands set status=? WHERE id=?");
                 HashSet<Command> commands = new HashSet<Command>(taskLimit);
                 ResultSet resultSet = null;
                 while(true) {

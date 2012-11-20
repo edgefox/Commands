@@ -1,5 +1,4 @@
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -45,7 +44,7 @@ public class Command {
     }
 
     public void run() {
-        ComboPooledDataSource dataSource = DataPool.getDataSource();
+        DataSource dataSource = DataPool.getDataSource();
         Connection connection = null;
         try {
             try{
