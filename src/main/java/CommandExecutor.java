@@ -1,7 +1,7 @@
-import org.apache.commons.dbcp.BasicDataSource;
-
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * User: Ivan Lyutov
@@ -34,7 +34,6 @@ public class CommandExecutor implements Runnable {
                                               resultSet.getString("name"),
                                               Command.Status.valueOf(resultSet.getString("status")));
                         command.execute();
-
                         updateStatement.setString(1, Command.Status.IN_PROGRESS.toString());
                         updateStatement.setInt(2, command.getId());
                         updateStatement.execute();
@@ -54,5 +53,20 @@ public class CommandExecutor implements Runnable {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < 10; i++) {
+            executorService.execute(new CommandExecutor());
+        }
+        while (!executorService.isTerminated()){
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupted");
+            }
+        }
+        ConnectionPool.getDataSource().close();
     }
 }
