@@ -8,7 +8,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 public class DataPool {
     private static ComboPooledDataSource dataSource;
 
-    public static ComboPooledDataSource getDataSource() {
+    synchronized public static ComboPooledDataSource getDataSource() {
         if (dataSource == null) {
             dataSource = new ComboPooledDataSource();
         }
