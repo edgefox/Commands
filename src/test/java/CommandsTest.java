@@ -4,6 +4,7 @@ import junit.framework.TestSuite;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,19 +28,24 @@ public class CommandsTest extends TestCase {
     }
 
     public void testCommands() {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 50; i++) {
+        //ArtD: You can do this waitings in a little bit more natural way (see )
+        //But according to what I can see you want to do here,
+        //you should consider hooking ThreadPoolExecutor's
+        //beforeExecute(Thread, Runnable) and afterExecute(Runnable, Throwable) methods
+        //to obtain and reveal some lock correspondingly .
+
+        ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+        for (int i = 0; i < 50; i++)
             executorService.execute(new CommandExecutor());
-        }
+
         executorService.shutdown();
 
-        while (!executorService.isTerminated()){
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException e) {
-                System.out.println("Interrupted");
-            }
+        try {
+            while (executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
         DataPool.getDataSource().close();
     }
 }
