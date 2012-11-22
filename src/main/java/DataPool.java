@@ -8,6 +8,10 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 public class DataPool {
     private static ComboPooledDataSource dataSource;
 
+    //ArtD: I suggest improvement for the next version:
+    //        use Spring for data sources initialization, thus,
+    //        you can easily switch before pool implementations
+    //        without code modifying.
     synchronized public static ComboPooledDataSource getDataSource() {
         if (dataSource == null) {
             dataSource = new ComboPooledDataSource();
