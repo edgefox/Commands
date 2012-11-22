@@ -49,6 +49,8 @@ public class CommandExecutor implements Runnable {
 
                     //SingleThreadExecutor is used here for the previous behaviour imitation purposes
                     //Later, you should go with some more useful implementation here.
+
+                    //ArtD: this should not be a local variable. Just didn't want to spread changes wider.
                     ExecutorService executor = Executors.newSingleThreadExecutor();
                     for (Command command : commands)
                         executor.execute(command);
