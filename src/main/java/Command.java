@@ -1,17 +1,12 @@
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 /**
  * User: Ivan Lyutov
  * Date: 11/15/12
  * Time: 3:06 PM
  */
-public class Command implements Runnable /* ArtD: To use as a task for an ExecutorService */{
+public class Command implements Runnable {
     private int id;
     private String name;
-    public Status status;
+    private Status status;
 
     public Command(int id, String name, Status status) {
         this.id = id;
@@ -44,38 +39,28 @@ public class Command implements Runnable /* ArtD: To use as a task for an Execut
     }
 
     public void run() {
-        DataSource dataSource = DataPool.getDataSource();
-        Connection connection = null;
-        try {
-            try{
-                //ArtD: I don't recommend spread database working all over the Command objects.
-                //  Consider creating (and running in a background thread) an object
-                //    dedicated to commands' statuses updating task
-                //    and some way to apply communication between Сommand instances and this object.
-                //  You can find some java.util.concurrent.BlockingQueue implementing classes to be useful.
-
-                connection = dataSource.getConnection();
-                Statement updateStatement = connection.createStatement();
-                updateStatement.executeUpdate("update commands set status='" + Status.DONE + "' where id=" + id);
-                System.out.println("executing " + name);
-            } finally {
-                if (connection != null) {
-                    connection.close();
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        System.out.println("executing " + name);
+        status = Status.DONE;
     }
 
     public static enum Status {
         NEW("NEW"), IN_PROGRESS("IN_PROGRESS"), DONE("DONE");
 
-        //ArtD: You doubtly need this here as there are standard enums' methods .toString() and .valueOf(String).
         private String value;
 
         private Status(final String value) {
             this.value = value;
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Command))
+            return false;
+
+        if (((Command)obj).getId() == getId())
+            return true;
+
+        return false;
     }
 }
