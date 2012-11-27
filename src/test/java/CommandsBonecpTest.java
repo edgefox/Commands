@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {"classpath:bonecp.xml"})
-@Component
 public class CommandsBonecpTest extends TestCase {
     @Autowired
     private DataSource datasource;
