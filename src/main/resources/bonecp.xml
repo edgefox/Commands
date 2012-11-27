@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+    <context:property-placeholder location="classpath:configs/bonecp.properties"/>
+
+    <bean id="dataSource" autowire="byName" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
+        <property name="driverClass" value="${bonecp.driverClass}" />
+        <property name="jdbcUrl" value="${bonecp.jdbcUrl}" />
+        <property name="username" value="${bonecp.username}" />
+        <property name="password" value="${bonecp.password}" />
+        <property name="partitionCount" value="50" />
+        <property name="maxConnectionsPerPartition" value="65" />
+        <property name="defaultAutoCommit" value="false" />
+        <property name="acquireRetryAttempts" value="10" />
+        <property name="acquireRetryDelayInMs" value="10000" />
+        <property name="connectionTimeoutInMs" value="10000" />
+        <property name="lazyInit" value="false" />
+        <property name="releaseHelperThreads" value="3" />
+        <property name="minConnectionsPerPartition" value="1" />
+    </bean>
+
+</beans>

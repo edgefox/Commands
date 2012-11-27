@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+    <context:property-placeholder location="classpath:configs/c3p0.properties"/>
+
+    <bean id="dataSource" autowire="byName" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${c3p0.driverClass}" />
+        <property name="maxPoolSize" value="${c3p0.maxPoolSize}" />
+        <property name="jdbcUrl" value="${c3p0.jdbcUrl}" />
+        <property name="user" value="${c3p0.user}" />
+        <property name="password" value="${c3p0.password}" />
+    </bean>
+
+</beans>
