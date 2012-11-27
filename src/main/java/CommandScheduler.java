@@ -1,9 +1,6 @@
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * User: Ivan Lyutov
