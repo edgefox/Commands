@@ -35,7 +35,7 @@ public class CommandScheduler implements Runnable {
                     }
 
                     while (resultSet.next()) {
-                        commands.put(new Command(resultSet.getInt("id"),
+                        commands.add(new Command(resultSet.getInt("id"),
                                                  resultSet.getString("name"),
                                                  Command.Status.valueOf(resultSet.getString("status"))));
                         updateStatement.addBatch("update commands set status='" + Command.Status.IN_PROGRESS +
@@ -44,9 +44,6 @@ public class CommandScheduler implements Runnable {
                     updateStatement.executeBatch();
                     connection.commit();
                 }
-            } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
             } finally {
                 connection.close();
             }

@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 public class CommandPool extends ThreadPoolExecutor {
     private DataSource dataSource;
     private BufferedUpdater bufferedUpdater;
+    private static final int updateBufferSize = 3000;
     private String updateFormat = "update commands set status='" + Command.Status.DONE +
                                   "' where id IN(%s) and status='" + Command.Status.IN_PROGRESS + "'";
     private boolean hasError = false;
@@ -21,7 +22,7 @@ public class CommandPool extends ThreadPoolExecutor {
               60L, TimeUnit.SECONDS,
               new LinkedBlockingQueue<Runnable>());
         this.dataSource = dataSource;
-        this.bufferedUpdater = new BufferedUpdater(3000, updateFormat, dataSource);
+        this.bufferedUpdater = new BufferedUpdater(updateBufferSize, updateFormat, dataSource);
     }
 
     public void run() {
