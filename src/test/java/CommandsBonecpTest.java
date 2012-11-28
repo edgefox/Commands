@@ -1,13 +1,14 @@
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -38,9 +39,23 @@ public class CommandsBonecpTest extends TestCase {
             commandPool.shutdown();
             commandPool.awaitTermination(10, TimeUnit.SECONDS);
 
-            assertFalse(commandPool.hasConcurrentModificationError());
+            assertFalse(commandPool.hasError());
         } catch (InterruptedException e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    @After
+    @Override
+    public void tearDown() {
+        Connection connection = null;
+        try {
+            connection = datasource.getConnection();
+            Statement statement = connection.createStatement();
+            statement.executeUpdate("update commands set status='NEW'");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 }

@@ -1,7 +1,4 @@
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +10,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class CommandPool extends ThreadPoolExecutor {
     private DataSource dataSource;
-    private static boolean concurrentModificationError = false;
+    private BufferedUpdater bufferedUpdater;
+    private String updateFormat = "update commands set status='" + Command.Status.DONE +
+                                  "' where id IN(%s) and status='" + Command.Status.IN_PROGRESS + "'";
+    private boolean hasError = false;
 
     public CommandPool(DataSource dataSource) {
         super(0,
@@ -21,6 +21,7 @@ public class CommandPool extends ThreadPoolExecutor {
               60L, TimeUnit.SECONDS,
               new LinkedBlockingQueue<Runnable>());
         this.dataSource = dataSource;
+        this.bufferedUpdater = new BufferedUpdater(3000, updateFormat, dataSource);
     }
 
     public void run() {
@@ -31,28 +32,17 @@ public class CommandPool extends ThreadPoolExecutor {
 
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
-        Connection connection = null;
-        Command command = (Command)r;
-        try {
-            try {
-                connection = dataSource.getConnection();
-                Statement updateStatement = connection.createStatement();
-                int updated = updateStatement.executeUpdate("update commands set status='" + Command.Status.DONE +
-                                                            "' where id=" + command.getId() + " and status='" + Command.Status.IN_PROGRESS + "'");
-                if (updated == 0) {
-                    concurrentModificationError = true;
-                }
-            } finally {
-                if (connection != null) {
-                    connection.close();
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        bufferedUpdater.add(((Command) r).getId());
     }
 
-    public static boolean hasConcurrentModificationError() {
-        return concurrentModificationError;
+    @Override
+    protected void terminated() {
+        bufferedUpdater.flushUpdate();
+        hasError = bufferedUpdater.hasError();
+        super.terminated();
+    }
+
+    public boolean hasError() {
+        return hasError;
     }
 }
