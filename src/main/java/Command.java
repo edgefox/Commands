@@ -1,3 +1,6 @@
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.impl.SimpleLog;
+
 /**
  * User: Ivan Lyutov
  * Date: 11/15/12
@@ -39,7 +42,8 @@ public class Command implements Runnable {
     }
 
     public void run() {
-        System.out.println("executing " + name);
+        Log log = new SimpleLog("commands.log");
+        log.info("executing " + name);
         status = Status.DONE;
     }
 
