@@ -1,1 +1,9 @@
-This file was created by IntelliJ IDEA 11.1.4 for binding GitHub repository
+Run sql:
+create database javatest;
+use javatest;
+create table commands(
+    id int(11) not null auto_increment primary key,
+    name varchar(255),
+    status enum('NEW', 'IN_PROGRESS', 'DONE')
+);
+Run mvn clean compile test in the root of the project
