@@ -13,4 +13,8 @@
         <property name="password" value="${dbcp.password}" />
     </bean>
 
+    <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
+        <constructor-arg value="Default logger" />
+    </bean>
+
 </beans>

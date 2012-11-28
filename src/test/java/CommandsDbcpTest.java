@@ -1,4 +1,5 @@
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 public class CommandsDbcpTest extends TestCase {
     @Autowired
     private DataSource datasource;
+    @Autowired
+    private Log logger;
 
     @org.junit.Test
     public void testCommands() {
@@ -41,7 +44,7 @@ public class CommandsDbcpTest extends TestCase {
 
             assertFalse(commandPool.hasError());
         } catch (InterruptedException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -54,8 +57,7 @@ public class CommandsDbcpTest extends TestCase {
             Statement statement = connection.createStatement();
             statement.executeUpdate("update commands set status='NEW'");
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 }

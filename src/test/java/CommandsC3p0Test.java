@@ -1,4 +1,5 @@
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +12,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 /**
  * User: Ivan Lyutov
@@ -22,6 +24,8 @@ import java.util.concurrent.*;
 public class CommandsC3p0Test extends TestCase {
     @Autowired
     private DataSource datasource;
+    @Autowired
+    private Log logger;
 
     @Test
     public void testCommands() {
@@ -40,7 +44,7 @@ public class CommandsC3p0Test extends TestCase {
 
             assertFalse(commandPool.hasError());
         } catch (InterruptedException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -53,8 +57,7 @@ public class CommandsC3p0Test extends TestCase {
             Statement statement = connection.createStatement();
             statement.executeUpdate("update commands set status='NEW'");
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 }

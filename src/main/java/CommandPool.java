@@ -1,3 +1,5 @@
+import org.apache.commons.logging.Log;
+
 import javax.sql.DataSource;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -15,6 +17,7 @@ public class CommandPool extends ThreadPoolExecutor {
     private String updateFormat = "update commands set status='" + Command.Status.DONE +
                                   "' where id IN(%s) and status='" + Command.Status.IN_PROGRESS + "'";
     private boolean hasError = false;
+    private Log logger;
 
     public CommandPool(DataSource dataSource) {
         super(0,
@@ -23,6 +26,16 @@ public class CommandPool extends ThreadPoolExecutor {
               new LinkedBlockingQueue<Runnable>());
         this.dataSource = dataSource;
         this.bufferedUpdater = new BufferedUpdater(updateBufferSize, updateFormat, dataSource);
+    }
+
+    public CommandPool(DataSource dataSource, Log logger) {
+        super(0,
+                Integer.MAX_VALUE,
+                60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>());
+        this.dataSource = dataSource;
+        this.logger = logger;
+        this.bufferedUpdater = new BufferedUpdater(updateBufferSize, updateFormat, dataSource, logger);
     }
 
     public void run() {

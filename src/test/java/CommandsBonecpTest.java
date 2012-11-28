@@ -1,4 +1,5 @@
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +24,15 @@ import java.util.concurrent.TimeUnit;
 public class CommandsBonecpTest extends TestCase {
     @Autowired
     private DataSource datasource;
+    @Autowired
+    private Log logger;
 
     @org.junit.Test
     public void testCommands() {
         CommandPool commandPool = new CommandPool(datasource);
         ExecutorService executorService = Executors.newCachedThreadPool();
         for (int i = 0; i < 10; i++) {
-            executorService.execute(new CommandScheduler(datasource, commandPool.getQueue()));
+            executorService.execute(new CommandScheduler(datasource, commandPool.getQueue(), logger));
         }
         executorService.shutdown();
 
@@ -38,10 +41,9 @@ public class CommandsBonecpTest extends TestCase {
             commandPool.run();
             commandPool.shutdown();
             commandPool.awaitTermination(10, TimeUnit.SECONDS);
-
             assertFalse(commandPool.hasError());
         } catch (InterruptedException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -54,8 +56,7 @@ public class CommandsBonecpTest extends TestCase {
             Statement statement = connection.createStatement();
             statement.executeUpdate("update commands set status='NEW'");
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 }

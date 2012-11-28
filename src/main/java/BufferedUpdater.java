@@ -1,4 +1,5 @@
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
 
 import javax.sql.DataSource;
 import java.sql.Statement;
@@ -17,8 +18,15 @@ public class BufferedUpdater {
     private String format;
     private DataSource dataSource;
     private Boolean hasError = false;
+    private Log logger;
 
     public BufferedUpdater(int size, String format, DataSource dataSource) {
+        updateQueue = new LinkedBlockingQueue<Integer>(size);
+        this.format = format;
+        this.dataSource = dataSource;
+    }
+
+    public BufferedUpdater(int size, String format, DataSource dataSource, Log logger) {
         updateQueue = new LinkedBlockingQueue<Integer>(size);
         this.format = format;
         this.dataSource = dataSource;
@@ -49,8 +57,12 @@ public class BufferedUpdater {
                     }
                 }
             } catch (SQLException e) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
+                if (logger != null) {
+                    logger.error(e.getMessage(), e);
+                } else {
+                    System.out.println(e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }

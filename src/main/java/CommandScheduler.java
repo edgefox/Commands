@@ -1,3 +1,5 @@
+import org.apache.commons.logging.Log;
+
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.concurrent.BlockingQueue;
@@ -8,13 +10,20 @@ import java.util.concurrent.BlockingQueue;
  * Time: 1:21 AM
  */
 public class CommandScheduler implements Runnable {
-    private static final int commandLimit = 10;
+    private static final int commandLimit = 100;
     private DataSource dataSource;
     private BlockingQueue<Runnable> commands;
+    private Log logger;
 
     public CommandScheduler(DataSource dataSource, BlockingQueue<Runnable> commands) {
         this.commands = commands;
         this.dataSource = dataSource;
+    }
+
+    public CommandScheduler(DataSource dataSource, BlockingQueue<Runnable> commands, Log logger) {
+        this.commands = commands;
+        this.dataSource = dataSource;
+        this.logger = logger;
     }
 
     @Override
@@ -35,9 +44,16 @@ public class CommandScheduler implements Runnable {
                     }
 
                     while (resultSet.next()) {
-                        commands.add(new Command(resultSet.getInt("id"),
-                                                 resultSet.getString("name"),
-                                                 Command.Status.valueOf(resultSet.getString("status"))));
+                        if (logger == null) {
+                            commands.add(new Command(resultSet.getInt("id"),
+                                                     resultSet.getString("name"),
+                                                     Command.Status.valueOf(resultSet.getString("status"))));
+                        } else {
+                            commands.add(new Command(resultSet.getInt("id"),
+                                                     resultSet.getString("name"),
+                                                     Command.Status.valueOf(resultSet.getString("status")),
+                                                     logger));
+                        }
                         updateStatement.addBatch("update commands set status='" + Command.Status.IN_PROGRESS +
                                                  "' where id=" + resultSet.getInt("id"));
                     }
@@ -48,8 +64,12 @@ public class CommandScheduler implements Runnable {
                 connection.close();
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            if (logger != null) {
+                logger.error(e.getMessage(), e);
+            } else {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 }

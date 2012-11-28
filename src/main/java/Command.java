@@ -10,8 +10,15 @@ public class Command implements Runnable {
     private int id;
     private String name;
     private Status status;
+    private Log logger;
 
     public Command(int id, String name, Status status) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+    }
+
+    public Command(int id, String name, Status status, Log logger) {
         this.id = id;
         this.name = name;
         this.status = status;
@@ -42,8 +49,11 @@ public class Command implements Runnable {
     }
 
     public void run() {
-        Log log = new SimpleLog("commands.log");
-        log.info("executing " + name);
+        if (logger != null) {
+            logger.info("executing " + name);
+        } else {
+            System.out.println("executing " + name);
+        }
         status = Status.DONE;
     }
 
