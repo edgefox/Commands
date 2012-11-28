@@ -39,9 +39,7 @@ public class CommandPool extends ThreadPoolExecutor {
     }
 
     public void run() {
-        while (!getQueue().isEmpty()) {
-            execute(getQueue().remove());
-        }
+        execute(getQueue().remove());
     }
 
     @Override
