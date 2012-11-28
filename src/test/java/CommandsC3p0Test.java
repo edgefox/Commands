@@ -12,7 +12,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
 
 /**
  * User: Ivan Lyutov
@@ -32,7 +31,7 @@ public class CommandsC3p0Test extends TestCase {
         CommandPool commandPool = new CommandPool(datasource);
         ExecutorService executorService = Executors.newCachedThreadPool();
         for (int i = 0; i < 100; i++) {
-            executorService.execute(new CommandScheduler(datasource, commandPool.getQueue()));
+            executorService.execute(new CommandScheduler(datasource, commandPool.getQueue(), logger));
         }
         executorService.shutdown();
 

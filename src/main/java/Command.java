@@ -22,6 +22,7 @@ public class Command implements Runnable {
         this.id = id;
         this.name = name;
         this.status = status;
+        this.logger = logger;
     }
 
     public int getId() {

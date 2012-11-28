@@ -14,7 +14,7 @@
         <property name="password" value="${c3p0.password}" />
     </bean>
 
-    <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
+    <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger" autowire="byName">
         <constructor-arg value="Default logger" />
     </bean>
 
