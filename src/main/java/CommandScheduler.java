@@ -10,7 +10,7 @@ import java.util.concurrent.BlockingQueue;
  * Time: 1:21 AM
  */
 public class CommandScheduler implements Runnable {
-    private static final int commandLimit = 100;
+    private static final int commandLimit = 300;
     private DataSource dataSource;
     private BlockingQueue<Runnable> commands;
     private Log logger;
@@ -32,10 +32,13 @@ public class CommandScheduler implements Runnable {
         try {
             Connection connection = dataSource.getConnection();
             connection.setAutoCommit(false);
+            connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
             PreparedStatement selectStatement = connection.prepareStatement("select id, name, status from commands " +
                                                                             "where status='" + Command.Status.NEW +
                                                                             "' limit " + commandLimit + " for update");
             Statement updateStatement = connection.createStatement();
+            int firstId = 0;
+            int lastId = 0;
             try {
                 while (true) {
                     resultSet = selectStatement.executeQuery();
@@ -54,10 +57,13 @@ public class CommandScheduler implements Runnable {
                                                      Command.Status.valueOf(resultSet.getString("status")),
                                                      logger));
                         }
-                        updateStatement.addBatch("update commands set status='" + Command.Status.IN_PROGRESS +
-                                                 "' where id=" + resultSet.getInt("id"));
                     }
-                    updateStatement.executeBatch();
+                    resultSet.first();
+                    firstId = resultSet.getInt("id");
+                    resultSet.last();
+                    lastId = resultSet.getInt("id");
+                    updateStatement.executeUpdate("update commands set status='" + Command.Status.IN_PROGRESS +
+                                                  "' where id between " + firstId + " AND " + lastId);
                     connection.commit();
                 }
             } finally {

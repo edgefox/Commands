@@ -1,6 +1,7 @@
 import org.apache.commons.logging.Log;
 
 import javax.sql.DataSource;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -11,9 +12,10 @@ import java.util.concurrent.TimeUnit;
  * Time: 1:49 AM
  */
 public class CommandPool extends ThreadPoolExecutor {
+    private BlockingQueue<Runnable> scheduledTasks;
     private DataSource dataSource;
     private BufferedUpdater bufferedUpdater;
-    private static final int updateBufferSize = 3000;
+    private static final int updateBufferSize = 1000;
     private String updateFormat = "update commands set status='" + Command.Status.DONE +
                                   "' where id IN(%s) and status='" + Command.Status.IN_PROGRESS + "'";
     private boolean hasError = false;
@@ -26,6 +28,7 @@ public class CommandPool extends ThreadPoolExecutor {
               new LinkedBlockingQueue<Runnable>());
         this.dataSource = dataSource;
         this.bufferedUpdater = new BufferedUpdater(updateBufferSize, updateFormat, dataSource);
+        this.scheduledTasks = new LinkedBlockingQueue<Runnable>();
     }
 
     public CommandPool(DataSource dataSource, Log logger) {
@@ -39,7 +42,13 @@ public class CommandPool extends ThreadPoolExecutor {
     }
 
     public void run() {
-        execute(getQueue().remove());
+        while (!scheduledTasks.isEmpty()) {
+            execute(scheduledTasks.remove());
+        }
+    }
+
+    public BlockingQueue<Runnable> getScheduledTasks() {
+        return scheduledTasks;
     }
 
     @Override

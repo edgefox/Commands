@@ -30,8 +30,8 @@ public class CommandsC3p0Test extends TestCase {
     public void testCommands() {
         CommandPool commandPool = new CommandPool(datasource);
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 100; i++) {
-            executorService.execute(new CommandScheduler(datasource, commandPool.getQueue(), logger));
+        for (int i = 0; i < 1000; i++) {
+            executorService.execute(new CommandScheduler(datasource, commandPool.getScheduledTasks(), logger));
         }
         executorService.shutdown();
 
