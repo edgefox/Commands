@@ -10,7 +10,7 @@ import java.util.concurrent.BlockingQueue;
  * Time: 1:21 AM
  */
 public class CommandScheduler implements Runnable {
-    private static final int commandLimit = 300;
+    private static final int commandLimit = 100;
     private DataSource dataSource;
     private BlockingQueue<Runnable> commands;
     private Log logger;
@@ -32,7 +32,6 @@ public class CommandScheduler implements Runnable {
         try {
             Connection connection = dataSource.getConnection();
             connection.setAutoCommit(false);
-            connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
             PreparedStatement selectStatement = connection.prepareStatement("select id, name, status from commands " +
                                                                             "where status='" + Command.Status.NEW +
                                                                             "' limit " + commandLimit + " for update");

@@ -26,7 +26,7 @@ public class CommandsC3p0Test extends TestCase {
     @Autowired
     private Log logger;
 
-    @Test
+    @org.junit.Test
     public void testCommands() {
         CommandPool commandPool = new CommandPool(datasource);
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -40,7 +40,6 @@ public class CommandsC3p0Test extends TestCase {
             commandPool.run();
             commandPool.shutdown();
             commandPool.awaitTermination(10, TimeUnit.SECONDS);
-
             assertFalse(commandPool.hasError());
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);

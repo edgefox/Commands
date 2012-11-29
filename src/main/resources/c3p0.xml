@@ -6,7 +6,7 @@
 
     <context:property-placeholder location="classpath:configs/c3p0.properties"/>
 
-    <bean id="dataSource" autowire="byName" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
         <property name="driverClass" value="${c3p0.driverClass}" />
         <property name="maxPoolSize" value="${c3p0.maxPoolSize}" />
         <property name="jdbcUrl" value="${c3p0.jdbcUrl}" />

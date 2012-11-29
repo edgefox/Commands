@@ -1,5 +1,4 @@
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.impl.SimpleLog;
 
 /**
  * User: Ivan Lyutov
