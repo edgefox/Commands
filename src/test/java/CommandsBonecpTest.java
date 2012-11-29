@@ -31,7 +31,7 @@ public class CommandsBonecpTest extends TestCase {
     public void testCommands() {
         CommandPool commandPool = new CommandPool(datasource);
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             executorService.execute(new CommandScheduler(datasource, commandPool.getScheduledTasks(), logger));
         }
         executorService.shutdown();
