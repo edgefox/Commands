@@ -1,0 +1,7 @@
+* To do
+** Commands
+    1. Make Command produce some kind of ExecutionResult (id, status)
+    2. Make Command abstract (with abstract result submission method)
+    3. Communicate between Commands and BufferedUpdater using BlockingQueue
+** BufferedUpdater
+    1. Flush condition: queue size reached some value OR some amount of time passed
