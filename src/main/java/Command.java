@@ -68,12 +68,18 @@ public class Command implements Runnable {
     }
 
     @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Command))
             return false;
 
-        if (((Command)obj).getId() == getId())
+        if (((Command)obj).getId() == getId()) {
             return true;
+        }
 
         return false;
     }
