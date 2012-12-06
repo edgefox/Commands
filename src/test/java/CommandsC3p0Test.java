@@ -1,7 +1,9 @@
+import commands.CommandScheduler;
+import commands.ExecutionResult;
+import commands.abstracts.Command;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.junit.After;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,22 +27,27 @@ public class CommandsC3p0Test extends TestCase {
     private DataSource datasource;
     @Autowired
     private Log logger;
+    @Autowired
+    private ExecutorService schedulerPool;
+    @Autowired
+    private ExecutorService executionPool;
+    @Autowired
+    private LinkedBlockingQueue<ExecutionResult> updateQueue;
 
     @org.junit.Test
     public void testCommands() {
-        CommandPool commandPool = new CommandPool(datasource);
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        Command.setQueue(updateQueue);
         for (int i = 0; i < 100; i++) {
-            executorService.execute(new CommandScheduler(datasource, commandPool.getScheduledTasks(), logger));
+            schedulerPool.execute(new CommandScheduler(datasource, executionPool, logger));
         }
-        executorService.shutdown();
+        schedulerPool.shutdown();
 
         try {
-            executorService.awaitTermination(10, TimeUnit.SECONDS);
-            commandPool.run();
-            commandPool.shutdown();
-            commandPool.awaitTermination(10, TimeUnit.SECONDS);
-            assertFalse(commandPool.hasError());
+            schedulerPool.awaitTermination(10, TimeUnit.SECONDS);
+            executionPool.shutdown();
+            while (!executionPool.isTerminated() || !updateQueue.isEmpty()) {
+                TimeUnit.SECONDS.sleep(10);
+            }
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
         }

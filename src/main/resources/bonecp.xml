@@ -13,8 +13,23 @@
         <property name="password" value="${bonecp.password}" />
     </bean>
 
+    <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
+    </bean>
+
+    <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
+    </bean>
+
+    <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
+    </bean>
+
     <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
-        <constructor-arg value="Default logger" />
+        <constructor-arg value="[COMMANDS]" />
+    </bean>
+
+    <bean class="commands.BufferedUpdater">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="updateQueue" ref="updateQueue" />
+        <property name="logger" ref="logger" />
     </bean>
 
 </beans>
