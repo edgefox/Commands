@@ -1,6 +1,7 @@
 package commands;
 
 import commands.abstracts.Command;
+import commands.abstracts.CommandFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 
@@ -21,16 +22,19 @@ public class CommandScheduler implements Runnable {
     private static final int commandLimit = 100;
     private DataSource dataSource;
     private ExecutorService commandsPool;
+    private CommandFactory commandFactory;
     private Log logger;
 
-    public CommandScheduler(DataSource dataSource, ExecutorService commandsPool) {
+    public CommandScheduler(DataSource dataSource, ExecutorService commandsPool, CommandFactory commandFactory) {
         this.dataSource = dataSource;
         this.commandsPool = commandsPool;
+        this.commandFactory = commandFactory;
     }
 
-    public CommandScheduler(DataSource dataSource, ExecutorService commandsPool, Log logger) {
+    public CommandScheduler(DataSource dataSource, ExecutorService commandsPool, CommandFactory commandFactory, Log logger) {
         this.dataSource = dataSource;
         this.commandsPool = commandsPool;
+        this.commandFactory = commandFactory;
         this.logger = logger;
     }
 
@@ -47,6 +51,7 @@ public class CommandScheduler implements Runnable {
             try {
                 List<Integer> ids = null;
                 Queue<Command> taskQueue = null;
+                Command tempCommand = null;
                 while (true) {
                     resultSet = selectStatement.executeQuery();
                     //TODO: real world exiting conditions
@@ -56,10 +61,11 @@ public class CommandScheduler implements Runnable {
                     ids = new ArrayList<Integer>();
                     taskQueue = new LinkedList<Command>();
                     while (resultSet.next()) {
-                        taskQueue.add(new CommandOne(resultSet.getInt("id"),
-                                                     resultSet.getString("name"),
-                                                     Command.Status.valueOf(resultSet.getString("status")),
-                                                     logger));
+                        tempCommand = commandFactory.createCommand();
+                        tempCommand.setId(resultSet.getInt("id"));
+                        tempCommand.setName(resultSet.getString("name"));
+                        tempCommand.setStatus(Command.Status.valueOf(resultSet.getString("status")));
+                        taskQueue.add(tempCommand);
                         ids.add(resultSet.getInt("id"));
                     }
                     updateStatement.executeUpdate("update commands set status='" + CommandOne.Status.IN_PROGRESS +

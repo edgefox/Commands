@@ -23,6 +23,18 @@
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
     </bean>
 
+    <bean id="commandFactory" class="commands.CommandOneFactory">
+        <property name="logger" ref="logger" />
+        <property name="updateQueue" ref="updateQueue" />
+    </bean>
+
+    <bean id="schedulerFactory" class="commands.CommandSchedulerFactory">
+        <property name="dataSource" ref="dataSource" />
+        <property name="commandFactory" ref="commandFactory" />
+        <property name="commandsPool" ref="executionPool" />
+        <property name="logger" ref="logger" />
+    </bean>
+
     <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
         <constructor-arg value="[COMMANDS]" />
     </bean>

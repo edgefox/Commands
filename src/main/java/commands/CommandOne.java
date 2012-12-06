@@ -3,6 +3,8 @@ package commands;
 import commands.abstracts.Command;
 import org.apache.commons.logging.Log;
 
+import java.util.concurrent.BlockingQueue;
+
 /**
  * User: Ivan Lyutov
  * Date: 11/15/12
@@ -10,12 +12,15 @@ import org.apache.commons.logging.Log;
  */
 public class CommandOne extends Command {
 
-    public CommandOne(int id, String name, Status status) {
-        super(id, name, status);
+    public CommandOne() {
     }
 
-    public CommandOne(int id, String name, Status status, Log logger) {
-        super(id, name, status, logger);
+    public CommandOne(int id, String name, Status status, BlockingQueue<ExecutionResult> updateQueue) {
+        super(id, name, status, updateQueue);
+    }
+
+    public CommandOne(int id, String name, Status status, BlockingQueue<ExecutionResult> updateQueue, Log logger) {
+        super(id, name, status, updateQueue, logger);
     }
 
     @Override

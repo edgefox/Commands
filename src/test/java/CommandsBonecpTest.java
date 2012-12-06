@@ -1,6 +1,5 @@
-import commands.CommandScheduler;
+import commands.CommandSchedulerFactory;
 import commands.ExecutionResult;
-import commands.abstracts.Command;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.junit.After;
@@ -33,12 +32,13 @@ public class CommandsBonecpTest extends TestCase {
     private ExecutorService executionPool;
     @Autowired
     private LinkedBlockingQueue<ExecutionResult> updateQueue;
+    @Autowired
+    private CommandSchedulerFactory schedulerFactory;
 
     @org.junit.Test
     public void testCommands() {
-        Command.setQueue(updateQueue);
         for (int i = 0; i < 100; i++) {
-            schedulerPool.execute(new CommandScheduler(datasource, executionPool, logger));
+            schedulerPool.execute(schedulerFactory.createCommandScheduler());
         }
         schedulerPool.shutdown();
 
