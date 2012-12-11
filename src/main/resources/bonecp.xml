@@ -13,13 +13,20 @@
         <property name="password" value="${bonecp.password}" />
     </bean>
 
+    <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
+        <constructor-arg value="[BONECP-COMMANDS]" />
+    </bean>
+
+    <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
+        <constructor-arg index="0" value="1000" />
+    </bean>
+
+    <bean class="commands.ExecutionResult" id="emptyResult" />
+
     <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
     </bean>
 
     <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
-    </bean>
-
-    <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
     </bean>
 
     <bean id="commandFactory" class="commands.CommandOneFactory">
@@ -34,14 +41,7 @@
         <property name="logger" ref="logger" />
     </bean>
 
-    <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
-        <constructor-arg value="[COMMANDS]" />
-    </bean>
-
-    <bean class="commands.BufferedUpdater">
-        <property name="dataSource" ref="dataSource"/>
-        <property name="updateQueue" ref="updateQueue" />
-        <property name="logger" ref="logger" />
+    <bean class="commands.BufferedUpdater" id="bufferedUpdater">
     </bean>
 
 </beans>

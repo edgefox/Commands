@@ -9,6 +9,9 @@ public class ExecutionResult {
     private int id;
     private String status;
 
+    public ExecutionResult() {
+    }
+
     public ExecutionResult(int id, String status) {
         this.id = id;
         this.status = status;

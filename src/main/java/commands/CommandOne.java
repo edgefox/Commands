@@ -25,6 +25,10 @@ public class CommandOne extends Command {
 
     @Override
     public void submitResult(ExecutionResult result) {
-        updateQueue.add(result);
+        try {
+            updateQueue.put(result);
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }

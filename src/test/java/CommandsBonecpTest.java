@@ -1,17 +1,14 @@
+import commands.BufferedUpdater;
 import commands.CommandSchedulerFactory;
 import commands.ExecutionResult;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
-import org.junit.After;
+
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.*;
 
 /**
@@ -23,8 +20,6 @@ import java.util.concurrent.*;
 @ContextConfiguration(locations = {"classpath:bonecp.xml"})
 public class CommandsBonecpTest extends TestCase {
     @Autowired
-    private DataSource datasource;
-    @Autowired
     private Log logger;
     @Autowired
     private ExecutorService schedulerPool;
@@ -34,6 +29,10 @@ public class CommandsBonecpTest extends TestCase {
     private LinkedBlockingQueue<ExecutionResult> updateQueue;
     @Autowired
     private CommandSchedulerFactory schedulerFactory;
+    @Autowired
+    private ExecutionResult emptyResult;
+    @Autowired
+    private BufferedUpdater bufferedUpdater;
 
     @org.junit.Test
     public void testCommands() {
@@ -41,27 +40,14 @@ public class CommandsBonecpTest extends TestCase {
             schedulerPool.execute(schedulerFactory.createCommandScheduler());
         }
         schedulerPool.shutdown();
+        bufferedUpdater.start();
 
         try {
-            schedulerPool.awaitTermination(10, TimeUnit.SECONDS);
+            schedulerPool.awaitTermination(5, TimeUnit.SECONDS);
             executionPool.shutdown();
-            while (!executionPool.isTerminated() || !updateQueue.isEmpty()) {
-                TimeUnit.SECONDS.sleep(10);
-            }
+            executionPool.awaitTermination(5, TimeUnit.SECONDS);
+            updateQueue.add(emptyResult);
         } catch (InterruptedException e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    @After
-    @Override
-    public void tearDown() {
-        Connection connection = null;
-        try {
-            connection = datasource.getConnection();
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("update commands set status='NEW'");
-        } catch (SQLException e) {
             logger.error(e.getMessage(), e);
         }
     }

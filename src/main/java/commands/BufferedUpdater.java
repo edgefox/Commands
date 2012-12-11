@@ -2,6 +2,7 @@ package commands;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.sql.Statement;
@@ -9,67 +10,57 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * User: Ivan Lyutov
  * Date: 11/27/12
  * Time: 11:51 PM
  */
-public class BufferedUpdater {
+public class BufferedUpdater extends Thread {
+    @Autowired
     private DataSource dataSource;
+    @Autowired
     private Log logger;
-    private BlockingQueue<ExecutionResult> updateQueue;
+    @Autowired
+    private LinkedBlockingQueue<ExecutionResult> updateQueue;
+    @Autowired
+    private ExecutionResult emptyResult;
+    private LinkedBlockingQueue<ExecutionResult> innerQueue;
     private static final String format = "update commands set status='DONE' where id IN(%s)";
 
     public BufferedUpdater() {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                flushUpdate();
+    }
+
+    @Override
+    public void run() {
+        try {
+            innerQueue = new LinkedBlockingQueue<ExecutionResult>(1000);
+            ExecutionResult result;
+            while (null != (result = updateQueue.take())) {
+                innerQueue.add(result);
+                if (innerQueue.remainingCapacity() == 0 || result == emptyResult) {
+                    flushUpdate();
+                }
             }
-        }, 100, 1000);
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
-    public Log getLogger() {
-        return logger;
-    }
-
-    public BlockingQueue<ExecutionResult> getUpdateQueue() {
-        return updateQueue;
-    }
-
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    public void setLogger(Log logger) {
-        this.logger = logger;
-    }
-
-    public void setUpdateQueue(BlockingQueue<ExecutionResult> updateQueue) {
-        this.updateQueue = updateQueue;
-    }
-
-    synchronized public void flushUpdate() {
-        if (!updateQueue.isEmpty()) {
+    public void flushUpdate() {
+        if (!innerQueue.isEmpty()) {
             try {
                 Connection connection = null;
                 try {
                     connection = dataSource.getConnection();
                     Statement statement = connection.createStatement();
                     List<Integer> ids = new ArrayList<Integer>();
-                    for(ExecutionResult item : updateQueue) {
+                    for(ExecutionResult item : innerQueue) {
                         ids.add(item.getId());
                     }
                     statement.executeUpdate(String.format(format, StringUtils.join(ids.toArray(), ",")));
-                    updateQueue.clear();
+                    innerQueue.clear();
                 } finally {
                     if (connection != null) {
                         connection.close();
