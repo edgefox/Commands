@@ -35,17 +35,21 @@ public class CommandsC3p0Test extends TestCase {
 
     @org.junit.Test
     public void testCommands() {
+        ExecutorService updaterPool = Executors.newSingleThreadExecutor();
+        updaterPool.execute(bufferedUpdater);
+        updaterPool.shutdown();
         for (int i = 0; i < 100; i++) {
             schedulerPool.execute(schedulerFactory.createCommandScheduler());
         }
         schedulerPool.shutdown();
-        bufferedUpdater.start();
+
 
         try {
             schedulerPool.awaitTermination(5, TimeUnit.SECONDS);
             executionPool.shutdown();
             executionPool.awaitTermination(5, TimeUnit.SECONDS);
-            updateQueue.add(emptyResult);
+            updateQueue.put(emptyResult);
+            updaterPool.awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
         }

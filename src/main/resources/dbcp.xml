@@ -13,10 +13,11 @@
         <property name="password" value="${dbcp.password}" />
     </bean>
 
-
     <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
         <constructor-arg value="[DBCP-COMMANDS]" />
     </bean>
+
+    <bean factory-bean="dataSource" factory-method="getConnection" id="updaterConnection" />
 
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
         <constructor-arg index="0" value="1000" />

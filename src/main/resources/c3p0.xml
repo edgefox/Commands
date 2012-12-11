@@ -18,6 +18,8 @@
         <constructor-arg value="[C3P0-COMMANDS]" />
     </bean>
 
+    <bean factory-bean="dataSource" factory-method="getConnection" id="updaterConnection" />
+
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
         <constructor-arg index="0" value="1000" />
     </bean>
