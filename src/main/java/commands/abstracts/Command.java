@@ -15,7 +15,7 @@ public abstract class Command implements Runnable {
     protected String name;
     protected Status status;
     protected Log logger;
-    protected BlockingQueue<ExecutionResult> updateQueue;
+    protected volatile BlockingQueue<ExecutionResult> updateQueue;
 
     public Command() {
     }

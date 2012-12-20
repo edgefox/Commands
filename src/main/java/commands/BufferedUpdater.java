@@ -7,8 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -24,30 +23,43 @@ public class BufferedUpdater implements Runnable {
     @Autowired
     private LinkedBlockingQueue<ExecutionResult> updateQueue;
     @Autowired
-    private ExecutionResult emptyResult;
-    private LinkedBlockingQueue<ExecutionResult> innerQueue;
+    private ExecutionResult poisonResult;
+    @Autowired
+    private ExecutionResult forceUpdateResult;
     private static final String format = "update commands set status='DONE' where id IN(%s)";
-    private boolean closed = false;
+    private int limit;
 
     public BufferedUpdater() {
+    }
+    
+    public void init() {
+        limit = updateQueue.remainingCapacity();
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    logger.info( "[BufferedUpdater] " + "Forcing update due to timeout");
+                    updateQueue.put(forceUpdateResult);
+                } catch (InterruptedException e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+        }, 100, 300);
     }
 
     @Override
     public void run() {
         try {
             try {
-                innerQueue = new LinkedBlockingQueue<ExecutionResult>(1000);
+                LinkedList<ExecutionResult> resultList = new LinkedList<ExecutionResult>();
                 ExecutionResult result;
                 while (null != (result = updateQueue.take())) {
-                    innerQueue.add(result);
-                    if (result == emptyResult) {
-                        logger.info( "[BufferedUpdater] " + "Empty result detected. Flush and exit...");
-                        closed = true;
-                    }
-                    if (innerQueue.remainingCapacity() == 0 || closed) {
-                        logger.info( "[BufferedUpdater] " + "Remaining capacity is " + innerQueue.remainingCapacity());
-                        flushUpdate();
-                        if (closed) {
+                    resultList.add(result);
+                    limit--;
+                    if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
+                        flushUpdate(resultList);
+                        if (result == poisonResult) {
+                            logger.info( "[BufferedUpdater] " + "Empty result detected. Flush and exit...");
                             return;
                         }
                     }
@@ -65,12 +77,13 @@ public class BufferedUpdater implements Runnable {
         }
     }
 
-    public void flushUpdate() throws SQLException {
-        if (!innerQueue.isEmpty()) {
+    public void flushUpdate(LinkedList<ExecutionResult> resultList) throws SQLException {
+        if (!resultList.isEmpty()) {
             Statement statement = updaterConnection.createStatement();
             List<Integer> ids = new ArrayList<Integer>();
-            while (!innerQueue.isEmpty()) {
-                ids.add(innerQueue.remove().getId());
+            while (resultList.size() > 0){
+                ids.add(resultList.remove().getId());
+                limit++;
             }
             statement.executeUpdate(String.format(format, StringUtils.join(ids.toArray(), ",")));
         }

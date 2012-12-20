@@ -25,11 +25,11 @@ public class CommandsC3p0Test extends TestCase {
     @Autowired
     private ExecutorService executionPool;
     @Autowired
-    private LinkedBlockingQueue<ExecutionResult> updateQueue;
+    private volatile LinkedBlockingQueue<ExecutionResult> updateQueue;
     @Autowired
     private CommandSchedulerFactory schedulerFactory;
     @Autowired
-    private ExecutionResult emptyResult;
+    private ExecutionResult poisonResult;
     @Autowired
     private BufferedUpdater bufferedUpdater;
 
@@ -43,12 +43,11 @@ public class CommandsC3p0Test extends TestCase {
         }
         schedulerPool.shutdown();
 
-
         try {
             schedulerPool.awaitTermination(5, TimeUnit.SECONDS);
             executionPool.shutdown();
             executionPool.awaitTermination(5, TimeUnit.SECONDS);
-            updateQueue.put(emptyResult);
+            updateQueue.put(poisonResult);
             updaterPool.awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);

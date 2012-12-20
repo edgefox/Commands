@@ -19,12 +19,18 @@
     </bean>
 
     <bean factory-bean="dataSource" factory-method="getConnection" id="updaterConnection" />
-
+    
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
         <constructor-arg index="0" value="1000" />
     </bean>
 
-    <bean class="commands.ExecutionResult" id="emptyResult" />
+    <bean class="commands.ExecutionResult" id="poisonResult">
+        <property name="id" value="-1000" />
+    </bean>
+    
+    <bean class="commands.ExecutionResult" id="forceUpdateResult">
+        <property name="id" value="-1100" />
+    </bean>
 
     <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
     </bean>
@@ -44,7 +50,6 @@
         <property name="logger" ref="logger" />
     </bean>
 
-    <bean class="commands.BufferedUpdater" id="bufferedUpdater">
-    </bean>
+    <bean class="commands.BufferedUpdater" id="bufferedUpdater" init-method="init" />
 
 </beans>

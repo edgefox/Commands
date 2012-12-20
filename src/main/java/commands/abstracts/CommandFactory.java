@@ -38,5 +38,5 @@ public abstract class CommandFactory {
         this.logger = logger;
     }
 
-    public abstract Command createCommand();
+    public abstract Command createCommand(int id, String name, Command.Status status);
 }

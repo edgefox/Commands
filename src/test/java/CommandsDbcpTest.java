@@ -29,7 +29,7 @@ public class CommandsDbcpTest extends TestCase {
     @Autowired
     private CommandSchedulerFactory schedulerFactory;
     @Autowired
-    private ExecutionResult emptyResult;
+    private ExecutionResult poisonResult;
     @Autowired
     private BufferedUpdater bufferedUpdater;
 
@@ -47,7 +47,7 @@ public class CommandsDbcpTest extends TestCase {
             schedulerPool.awaitTermination(5, TimeUnit.SECONDS);
             executionPool.shutdown();
             executionPool.awaitTermination(5, TimeUnit.SECONDS);
-            updateQueue.put(emptyResult);
+            updateQueue.put(poisonResult);
             updaterPool.awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
