@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.sql.DataSource;
 import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -17,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class BufferedUpdater implements Runnable {
     @Autowired
-    private Connection updaterConnection;
+    private DataSource dataSource;
     @Autowired
     private Log logger;
     @Autowired
@@ -26,19 +27,20 @@ public class BufferedUpdater implements Runnable {
     private ExecutionResult poisonResult;
     @Autowired
     private ExecutionResult forceUpdateResult;
+    @Autowired
+    private Integer limit;
     private static final String format = "update commands set status='DONE' where id IN(%s)";
-    private int limit;
 
     public BufferedUpdater() {
     }
-    
+
     public void init() {
         limit = updateQueue.remainingCapacity();
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 try {
-                    logger.info( "[BufferedUpdater] " + "Forcing update due to timeout");
+                    logger.info("[BufferedUpdater] " + "Forcing update due to timeout");
                     updateQueue.put(forceUpdateResult);
                 } catch (InterruptedException e) {
                     logger.error(e.getMessage(), e);
@@ -49,39 +51,30 @@ public class BufferedUpdater implements Runnable {
 
     @Override
     public void run() {
-        try {
-            try {
-                LinkedList<ExecutionResult> resultList = new LinkedList<ExecutionResult>();
-                ExecutionResult result;
-                while (null != (result = updateQueue.take())) {
-                    resultList.add(result);
-                    limit--;
-                    if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
-                        flushUpdate(resultList);
-                        if (result == poisonResult) {
-                            logger.info( "[BufferedUpdater] " + "Empty result detected. Flush and exit...");
-                            return;
-                        }
+        try (Connection connection = dataSource.getConnection()) {
+            LinkedList<ExecutionResult> resultList = new LinkedList<ExecutionResult>();
+            ExecutionResult result;
+            while (null != (result = updateQueue.take())) {
+                resultList.add(result);
+                limit--;
+                if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
+                    flushUpdate(resultList, connection);
+                    if (result == poisonResult) {
+                        logger.info("[BufferedUpdater] " + "Empty result detected. Flush and exit...");
+                        return;
                     }
                 }
-            } finally {
-                if (updaterConnection != null) {
-                    logger.info( "[BufferedUpdater] " + "Closed connection");
-                    updaterConnection.close();
-                }
             }
-        } catch (InterruptedException e) {
-            logger.error(e);
-        } catch (SQLException e) {
+        } catch (InterruptedException | SQLException e) {
             logger.error(e);
         }
     }
 
-    public void flushUpdate(LinkedList<ExecutionResult> resultList) throws SQLException {
+    public void flushUpdate(LinkedList<ExecutionResult> resultList, Connection connection) throws SQLException {
         if (!resultList.isEmpty()) {
-            Statement statement = updaterConnection.createStatement();
+            Statement statement = connection.createStatement();
             List<Integer> ids = new ArrayList<Integer>();
-            while (resultList.size() > 0){
+            while (resultList.size() > 0) {
                 ids.add(resultList.remove().getId());
                 limit++;
             }

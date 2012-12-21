@@ -20,8 +20,8 @@ import java.util.concurrent.ExecutorService;
  */
 public class CommandScheduler implements Runnable {
     private static final int commandLimit = 100;
-    private static final String selectFormat = "select id, name, status from commands " + 
-                                               "where status='%s' limit  %s for update";
+    private static final String selectFormat = "select id, name, status from commands " +
+            "where status='%s' limit  %s for update";
     private static final String updateFormat = "update commands set status='%s' where id in(%s)";
     private DataSource dataSource;
     private ExecutorService commandsPool;
@@ -44,42 +44,37 @@ public class CommandScheduler implements Runnable {
     @Override
     public void run() {
         ResultSet resultSet = null;
-        try {
-            Connection connection = dataSource.getConnection();
+        try(Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
-            PreparedStatement selectStatement = connection.prepareStatement(String.format(selectFormat, 
-                                                                                          CommandOne.Status.NEW, 
+            PreparedStatement selectStatement = connection.prepareStatement(String.format(selectFormat,
+                                                                                          CommandOne.Status.NEW,
                                                                                           commandLimit));
             Statement updateStatement = connection.createStatement();
-            try {
-                List<Integer> ids = null;
-                Queue<Command> taskQueue = null;
-                Command command = null;
-                while (true) {
-                    resultSet = selectStatement.executeQuery();
-                    //TODO: real world exiting conditions
-                    if (!resultSet.isBeforeFirst()) {
-                        break;
-                    }
-                    ids = new ArrayList<Integer>();
-                    taskQueue = new LinkedList<Command>();
-                    while (resultSet.next()) {
-                        command = commandFactory.createCommand(resultSet.getInt("id"),
-                                                               resultSet.getString("name"),
-                                                               Command.Status.valueOf(resultSet.getString("status")));
-                        taskQueue.add(command);
-                        ids.add(command.getId());
-                    }
-                    updateStatement.executeUpdate(String.format(updateFormat, 
-                                                                Command.Status.IN_PROGRESS, 
-                                                                StringUtils.join(ids.toArray(), ",")));
-                    connection.commit();
-                    while (!taskQueue.isEmpty()) {
-                        commandsPool.execute(taskQueue.remove());
-                    }
+            List<Integer> ids = null;
+            Queue<Command> taskQueue = null;
+            Command command = null;
+            while (true) {
+                resultSet = selectStatement.executeQuery();
+                //TODO: real world exiting conditions
+                if (!resultSet.isBeforeFirst()) {
+                    break;
                 }
-            } finally {
-                connection.close();
+                ids = new ArrayList<Integer>();
+                taskQueue = new LinkedList<Command>();
+                while (resultSet.next()) {
+                    command = commandFactory.createCommand(resultSet.getInt("id"),
+                                                           resultSet.getString("name"),
+                                                           Command.Status.valueOf(resultSet.getString("status")));
+                    taskQueue.add(command);
+                    ids.add(command.getId());
+                }
+                updateStatement.executeUpdate(String.format(updateFormat,
+                                                            Command.Status.IN_PROGRESS,
+                                                            StringUtils.join(ids.toArray(), ",")));
+                connection.commit();
+                while (!taskQueue.isEmpty()) {
+                    commandsPool.execute(taskQueue.remove());
+                }
             }
         } catch (SQLException e) {
             if (logger != null) {
