@@ -35,7 +35,6 @@ public class BufferedUpdater implements Runnable {
     }
 
     public void init() {
-        limit = updateQueue.remainingCapacity();
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
