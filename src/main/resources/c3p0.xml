@@ -34,11 +34,9 @@
         <property name="id" value="-1100" />
     </bean>
 
-    <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
-    </bean>
+    <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
 
-    <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
-    </bean>
+    <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
 
     <bean id="commandFactory" class="commands.CommandOneFactory">
         <property name="logger" ref="logger" />
