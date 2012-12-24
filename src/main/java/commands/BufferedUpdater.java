@@ -29,7 +29,7 @@ public class BufferedUpdater implements Runnable {
     private ExecutionResult forceUpdateResult;
     @Autowired
     private Integer limit;
-    private static final String format = "update commands set status='DONE' where id IN(%s)";
+    private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
 
     public BufferedUpdater() {
     }
@@ -77,7 +77,7 @@ public class BufferedUpdater implements Runnable {
                 ids.add(resultList.remove().getId());
                 limit++;
             }
-            statement.executeUpdate(String.format(format, StringUtils.join(ids.toArray(), ",")));
+            statement.executeUpdate(String.format(FORMAT, StringUtils.join(ids.toArray(), ",")));
         }
     }
 }

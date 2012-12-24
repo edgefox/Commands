@@ -19,10 +19,10 @@ import java.util.concurrent.ExecutorService;
  * Time: 1:21 AM
  */
 public class CommandScheduler implements Runnable {
-    private static final int commandLimit = 100;
-    private static final String selectFormat = "select id, name, status from commands " +
-            "where status='%s' limit  %s for update";
-    private static final String updateFormat = "update commands set status='%s' where id in(%s)";
+    private static final int COMMAND_LIMIT = 100;
+    private static final String SELECT_FORMAT = "select id, name, status from commands " +
+                                                "where status='%s' limit  %s for update";
+    private static final String UPDATE_FORMAT = "update commands set status='%s' where id in(%s)";
     private DataSource dataSource;
     private ExecutorService commandsPool;
     private CommandFactory commandFactory;
@@ -46,9 +46,9 @@ public class CommandScheduler implements Runnable {
         ResultSet resultSet = null;
         try(Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
-            PreparedStatement selectStatement = connection.prepareStatement(String.format(selectFormat,
+            PreparedStatement selectStatement = connection.prepareStatement(String.format(SELECT_FORMAT,
                                                                                           CommandOne.Status.NEW,
-                                                                                          commandLimit));
+                                                                                          COMMAND_LIMIT));
             Statement updateStatement = connection.createStatement();
             List<Integer> ids = null;
             Queue<Command> taskQueue = null;
@@ -68,7 +68,7 @@ public class CommandScheduler implements Runnable {
                     taskQueue.add(command);
                     ids.add(command.getId());
                 }
-                updateStatement.executeUpdate(String.format(updateFormat,
+                updateStatement.executeUpdate(String.format(UPDATE_FORMAT,
                                                             Command.Status.IN_PROGRESS,
                                                             StringUtils.join(ids.toArray(), ",")));
                 connection.commit();
