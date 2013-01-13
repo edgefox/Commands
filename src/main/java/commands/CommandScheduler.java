@@ -50,17 +50,17 @@ public class CommandScheduler implements Runnable {
                                                                                           CommandOne.Status.NEW,
                                                                                           COMMAND_LIMIT));
             Statement updateStatement = connection.createStatement();
-            List<Integer> ids = null;
-            Queue<Command> taskQueue = null;
-            Command command = null;
+            List<Integer> ids;
+            Queue<Command> taskQueue;
+            Command command;
             while (true) {
                 resultSet = selectStatement.executeQuery();
                 //TODO: real world exiting conditions
                 if (!resultSet.isBeforeFirst()) {
                     break;
                 }
-                ids = new ArrayList<Integer>();
-                taskQueue = new LinkedList<Command>();
+                ids = new ArrayList<>();
+                taskQueue = new LinkedList<>();
                 while (resultSet.next()) {
                     command = commandFactory.createCommand(resultSet.getInt("id"),
                                                            resultSet.getString("name"),

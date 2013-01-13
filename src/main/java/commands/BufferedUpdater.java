@@ -51,7 +51,7 @@ public class BufferedUpdater implements Runnable {
     @Override
     public void run() {
         try (Connection connection = dataSource.getConnection()) {
-            LinkedList<ExecutionResult> resultList = new LinkedList<ExecutionResult>();
+            LinkedList<ExecutionResult> resultList = new LinkedList<>();
             ExecutionResult result;
             while (null != (result = updateQueue.take())) {
                 resultList.add(result);
@@ -72,7 +72,7 @@ public class BufferedUpdater implements Runnable {
     public void flushUpdate(LinkedList<ExecutionResult> resultList, Connection connection) throws SQLException {
         if (!resultList.isEmpty()) {
             Statement statement = connection.createStatement();
-            List<Integer> ids = new ArrayList<Integer>();
+            List<Integer> ids = new ArrayList<>();
             while (resultList.size() > 0) {
                 ids.add(resultList.remove().getId());
                 limit++;

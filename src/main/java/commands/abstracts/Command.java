@@ -105,6 +105,5 @@ public abstract class Command implements Runnable {
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Command && ((Command) obj).getId() == getId();
-
     }
 }
