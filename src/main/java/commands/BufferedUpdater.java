@@ -3,11 +3,14 @@ package commands;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import java.sql.Statement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -16,26 +19,29 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Date: 11/27/12
  * Time: 11:51 PM
  */
+@Component
 public class BufferedUpdater implements Runnable {
     @Autowired
     private DataSource dataSource;
     @Autowired
     private Log logger;
     @Autowired
-    private LinkedBlockingQueue<ExecutionResult> updateQueue;
+    private volatile LinkedBlockingQueue<ExecutionResult> updateQueue;
     @Autowired
     private ExecutionResult poisonResult;
     @Autowired
     private ExecutionResult forceUpdateResult;
-    @Autowired
-    private Integer limit;
+    private Integer limit = 1000;
     private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
+    private Timer timer;
 
     public BufferedUpdater() {
+        timer = new Timer();
     }
 
+    @PostConstruct
     public void init() {
-        new Timer().schedule(new TimerTask() {
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 try {
@@ -45,7 +51,7 @@ public class BufferedUpdater implements Runnable {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, 100, 300);
+        }, 100, 3000);
     }
 
     @Override
@@ -60,6 +66,7 @@ public class BufferedUpdater implements Runnable {
                     flushUpdate(resultList, connection);
                     if (result == poisonResult) {
                         logger.info("[BufferedUpdater] " + "Empty result detected. Flush and exit...");
+                        timer.cancel();
                         return;
                     }
                 }

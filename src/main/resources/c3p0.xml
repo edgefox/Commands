@@ -17,39 +17,20 @@
     <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
         <constructor-arg value="[C3P0-COMMANDS]" />
     </bean>
-    
-    <bean id="limit" class="java.lang.Integer">
-        <constructor-arg value="1000" />
-    </bean>
+
+    <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
+    <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
     
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
-        <constructor-arg index="0" ref="limit" />
+        <constructor-arg index="0" type="int" value="1000" />
     </bean>
-
     <bean class="commands.ExecutionResult" id="poisonResult">
         <property name="id" value="-1000" />
     </bean>
-    
     <bean class="commands.ExecutionResult" id="forceUpdateResult">
         <property name="id" value="-1100" />
     </bean>
 
-    <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
-
-    <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
-
-    <bean id="commandFactory" class="commands.CommandOneFactory">
-        <property name="logger" ref="logger" />
-        <property name="updateQueue" ref="updateQueue" />
-    </bean>
-
-    <bean id="schedulerFactory" class="commands.CommandSchedulerFactory">
-        <property name="dataSource" ref="dataSource" />
-        <property name="commandFactory" ref="commandFactory" />
-        <property name="commandsPool" ref="executionPool" />
-        <property name="logger" ref="logger" />
-    </bean>
-
-    <bean class="commands.BufferedUpdater" id="bufferedUpdater" init-method="init" />
-
+    <context:annotation-config />
+    <context:component-scan base-package="commands" />
 </beans>

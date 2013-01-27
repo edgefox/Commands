@@ -1,10 +1,17 @@
 import commands.BufferedUpdater;
-import commands.CommandSchedulerFactory;
+import commands.CommandScheduler;
 import commands.ExecutionResult;
-import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import org.apache.commons.logging.Log;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,7 +22,9 @@ import java.util.concurrent.TimeUnit;
  * Date: 12/24/12
  * Time: 12:32 PM
  */
-public class AbstractPETest extends TestCase {
+public class AbstractPETest {
+    @Autowired
+    private ApplicationContext applicationContext;
     @Autowired
     private Log logger;
     @Autowired
@@ -25,19 +34,32 @@ public class AbstractPETest extends TestCase {
     @Autowired
     private LinkedBlockingQueue<ExecutionResult> updateQueue;
     @Autowired
-    private CommandSchedulerFactory schedulerFactory;
-    @Autowired
     private ExecutionResult poisonResult;
     @Autowired
     private BufferedUpdater bufferedUpdater;
+    @Autowired
+    private DataSource dataSource;
 
-    @org.junit.Test
+    @Before
+    public void setUp() {
+        try {
+            try (Connection connection = dataSource.getConnection()) {
+                Statement statement = connection.createStatement();
+                logger.info("Cleaning up the mess...");
+                statement.executeUpdate("update commands set status='NEW'");
+            }
+        } catch (SQLException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
     public void testCommands() {
         ExecutorService updaterPool = Executors.newSingleThreadExecutor();
         updaterPool.execute(bufferedUpdater);
         updaterPool.shutdown();
         for (int i = 0; i < 100; i++) {
-            schedulerPool.execute(schedulerFactory.createCommandScheduler());
+            schedulerPool.execute((CommandScheduler)applicationContext.getBean("commandScheduler"));
         }
         schedulerPool.shutdown();
 

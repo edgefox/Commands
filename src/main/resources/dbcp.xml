@@ -4,6 +4,9 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
+    <context:annotation-config />
+    <context:component-scan base-package="commands" />
+    
     <context:property-placeholder location="classpath:configs/dbcp.properties"/>
 
     <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
@@ -14,41 +17,19 @@
     </bean>
 
     <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
-        <constructor-arg value="[DBCP-COMMANDS]" />
-    </bean>
-
-    <bean id="limit" class="java.lang.Integer">
-        <constructor-arg value="1000" />
-    </bean>
-
-    <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
-        <constructor-arg index="0" ref="limit" />
-    </bean>
-
-    <bean class="commands.ExecutionResult" id="poisonResult">
-        <property name="id" value="-1000" />
-    </bean>
-
-    <bean class="commands.ExecutionResult" id="forceUpdateResult">
-        <property name="id" value="-1100" />
+        <constructor-arg value="[C3P0-COMMANDS]" />
     </bean>
 
     <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
-
     <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
 
-    <bean id="commandFactory" class="commands.CommandOneFactory">
-        <property name="logger" ref="logger" />
-        <property name="updateQueue" ref="updateQueue" />
+    <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
+        <constructor-arg index="0" type="int" value="1000" />
     </bean>
-
-    <bean id="schedulerFactory" class="commands.CommandSchedulerFactory">
-        <property name="dataSource" ref="dataSource" />
-        <property name="commandFactory" ref="commandFactory" />
-        <property name="commandsPool" ref="executionPool" />
-        <property name="logger" ref="logger" />
+    <bean class="commands.ExecutionResult" id="poisonResult">
+        <property name="id" value="-1000" />
     </bean>
-
-    <bean class="commands.BufferedUpdater" id="bufferedUpdater" init-method="init" />
-
+    <bean class="commands.ExecutionResult" id="forceUpdateResult">
+        <property name="id" value="-1100" />
+    </bean>
 </beans>

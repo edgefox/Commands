@@ -1,4 +1,4 @@
-package commands.abstracts;
+package commands.entities;
 
 import commands.ExecutionResult;
 import org.apache.commons.logging.Log;
@@ -11,28 +11,13 @@ import java.util.concurrent.BlockingQueue;
  * Time: 3:30 PM
  */
 public abstract class Command implements Runnable {
-    protected int id;
-    protected String name;
-    protected Status status;
-    protected Log logger;
-    protected volatile BlockingQueue<ExecutionResult> updateQueue;
+    private int id;
+    private String name;
+    private Status status;
+    private Log logger;
+    private volatile BlockingQueue<ExecutionResult> updateQueue;
 
     public Command() {
-    }
-
-    public Command(int id, String name, Status status, BlockingQueue<ExecutionResult> updateQueue) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-        this.updateQueue = updateQueue;
-    }
-
-    public Command(int id, String name, Status status, BlockingQueue<ExecutionResult> updateQueue, Log logger) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-        this.updateQueue = updateQueue;
-        this.logger = logger;
     }
 
     public int getId() {
@@ -85,16 +70,6 @@ public abstract class Command implements Runnable {
         }
     }
 
-    public void run() {
-        if (logger != null) {
-            logger.info("executing " + name);
-        } else {
-            System.out.println("executing " + name);
-        }
-        status = Status.DONE;
-        submitResult(new ExecutionResult(id, status.toString()));
-    }
-
     public abstract void submitResult(ExecutionResult result);
 
     @Override
@@ -105,5 +80,10 @@ public abstract class Command implements Runnable {
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Command && ((Command) obj).getId() == getId();
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(getId());
     }
 }

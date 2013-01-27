@@ -1,7 +1,11 @@
 package commands;
 
-import commands.abstracts.Command;
+import commands.entities.Command;
 import org.apache.commons.logging.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.BlockingQueue;
 
@@ -10,25 +14,31 @@ import java.util.concurrent.BlockingQueue;
  * Date: 11/15/12
  * Time: 3:06 PM
  */
+@Component("command")
+@Scope(value = "prototype")
 public class CommandOne extends Command {
+    @Autowired
+    ApplicationContext applicationContext;
 
     public CommandOne() {
     }
 
-    public CommandOne(int id, String name, Status status, BlockingQueue<ExecutionResult> updateQueue) {
-        super(id, name, status, updateQueue);
-    }
-
-    public CommandOne(int id, String name, Status status, BlockingQueue<ExecutionResult> updateQueue, Log logger) {
-        super(id, name, status, updateQueue, logger);
+    @Override
+    public void run() {
+        setLogger((Log)applicationContext.getBean("logger"));
+        setUpdateQueue((BlockingQueue<ExecutionResult>)applicationContext.getBean("updateQueue"));
+        
+        getLogger().info("executing " + getName());
+        setStatus(Status.DONE);
+        submitResult(new ExecutionResult(getId(), getStatus().toString()));
     }
 
     @Override
     public void submitResult(ExecutionResult result) {
         try {
-            updateQueue.put(result);
+            getUpdateQueue().put(result);
         } catch (InterruptedException e) {
-            System.out.println(e.getMessage());
+            getLogger().error(e.getMessage());
         }
     }
 }
