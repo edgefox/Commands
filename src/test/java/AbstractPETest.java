@@ -42,12 +42,10 @@ public class AbstractPETest {
 
     @Before
     public void setUp() {
-        try {
-            try (Connection connection = dataSource.getConnection()) {
-                Statement statement = connection.createStatement();
-                logger.info("Cleaning up the mess...");
-                statement.executeUpdate("update commands set status='NEW'");
-            }
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            logger.info("Cleaning up the mess...");
+            statement.executeUpdate("update commands set status='NEW'");
         } catch (SQLException e) {
             logger.error(e.getMessage(), e);
         }
