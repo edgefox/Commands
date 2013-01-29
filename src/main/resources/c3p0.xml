@@ -24,10 +24,10 @@
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
         <constructor-arg index="0" type="int" value="1000" />
     </bean>
-    <bean class="commands.ExecutionResult" id="poisonResult">
+    <bean class="commands.entities.ExecutionResult" id="poisonResult">
         <property name="id" value="-1000" />
     </bean>
-    <bean class="commands.ExecutionResult" id="forceUpdateResult">
+    <bean class="commands.entities.ExecutionResult" id="forceUpdateResult">
         <property name="id" value="-1100" />
     </bean>
 

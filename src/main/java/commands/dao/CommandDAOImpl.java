@@ -1,6 +1,6 @@
 package commands.dao;
 
-import commands.CommandOne;
+import commands.entities.CommandOne;
 import commands.entities.Command;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,4 +66,5 @@ public class CommandDAOImpl implements CommandDAO {
             }
         }
     }
+
 }

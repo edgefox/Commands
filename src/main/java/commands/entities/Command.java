@@ -1,6 +1,5 @@
 package commands.entities;
 
-import commands.ExecutionResult;
 import org.apache.commons.logging.Log;
 
 import java.util.concurrent.BlockingQueue;

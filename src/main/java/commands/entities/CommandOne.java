@@ -1,6 +1,5 @@
-package commands;
+package commands.entities;
 
-import commands.entities.Command;
 import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

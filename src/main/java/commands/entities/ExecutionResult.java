@@ -1,4 +1,4 @@
-package commands;
+package commands.entities;
 
 /**
  * User: Ivan Lyutov
