@@ -17,7 +17,7 @@
     </bean>
 
     <bean class="org.apache.commons.logging.impl.SimpleLog" id="logger">
-        <constructor-arg value="[C3P0-COMMANDS]" />
+        <constructor-arg value="[DBCP-COMMANDS]" />
     </bean>
 
     <bean id="schedulerPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />

@@ -17,7 +17,7 @@ import java.util.concurrent.BlockingQueue;
 @Scope(value = "prototype")
 public class CommandOne extends Command {
     @Autowired
-    ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     public CommandOne() {
     }

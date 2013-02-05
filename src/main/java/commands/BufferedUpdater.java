@@ -23,6 +23,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class BufferedUpdater implements Runnable {
     @Autowired
     private DataSource dataSource;
+    private Connection connection;
     @Autowired
     private Log logger;
     @Autowired
@@ -31,16 +32,25 @@ public class BufferedUpdater implements Runnable {
     private ExecutionResult poisonResult;
     @Autowired
     private ExecutionResult forceUpdateResult;
-    private Integer limit = 1000;
+    private int limit;
     private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
     private Timer timer;
 
     public BufferedUpdater() {
-        timer = new Timer();
+        limit = 1000;
+    }
+    
+    public BufferedUpdater(int limit) {
+        this.limit = limit;
     }
 
     @PostConstruct
-    public void init() {
+    public void initTimer() {
+        initTimer(100, 3000);
+    }
+    
+    public void initTimer(int delay, int period) {
+        timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -51,19 +61,26 @@ public class BufferedUpdater implements Runnable {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, 100, 3000);
+        }, delay, period);
+    }
+    
+    public void stopTimer(){
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     @Override
     public void run() {
         try (Connection connection = dataSource.getConnection()) {
-            LinkedList<ExecutionResult> resultList = new LinkedList<>();
+            this.connection = connection;
+            Queue<ExecutionResult> resultList = new LinkedList<>();
             ExecutionResult result;
             while (null != (result = updateQueue.take())) {
                 resultList.add(result);
                 limit--;
                 if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
-                    flushUpdate(resultList, connection);
+                    flushUpdate(resultList);
                     if (result == poisonResult) {
                         logger.info("[BufferedUpdater] " + "Empty result detected. Flush and exit...");
                         timer.cancel();
@@ -72,19 +89,20 @@ public class BufferedUpdater implements Runnable {
                 }
             }
         } catch (InterruptedException | SQLException e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
         }
     }
 
-    public void flushUpdate(LinkedList<ExecutionResult> resultList, Connection connection) throws SQLException {
+    public void flushUpdate(Queue<ExecutionResult> resultList) throws SQLException {
         if (!resultList.isEmpty()) {
-            Statement statement = connection.createStatement();
-            List<Integer> ids = new ArrayList<>();
-            while (resultList.size() > 0) {
-                ids.add(resultList.remove().getId());
-                limit++;
+            try(Statement statement = connection.createStatement()) {
+                List<Integer> ids = new ArrayList<>();
+                while (resultList.size() > 0) {
+                    ids.add(resultList.remove().getId());
+                    limit++;
+                }
+                statement.executeUpdate(String.format(FORMAT, StringUtils.join(ids.toArray(), ",")));
             }
-            statement.executeUpdate(String.format(FORMAT, StringUtils.join(ids.toArray(), ",")));
         }
     }
 }

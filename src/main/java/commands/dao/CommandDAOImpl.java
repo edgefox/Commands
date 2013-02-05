@@ -1,7 +1,7 @@
 package commands.dao;
 
-import commands.entities.CommandOne;
 import commands.entities.Command;
+import commands.entities.CommandOne;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -12,6 +12,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * User: Ivan Lyutov
@@ -22,10 +23,11 @@ import java.util.List;
 @Scope("prototype")
 public class CommandDAOImpl implements CommandDAO {
     @Autowired
-    ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
     @Autowired
     private DataSource dataSource;
     private Connection connection;
+    private static AtomicInteger fromId = new AtomicInteger(0);
 
     @Override
     public List<Command> getListForUpdate(int maxSize) throws SQLException {
@@ -36,14 +38,15 @@ public class CommandDAOImpl implements CommandDAO {
                                                                                       CommandOne.Status.NEW,
                                                                                       fromId.getAndAdd(maxSize),
                                                                                       maxSize));
-        ResultSet resultSet = selectStatement.executeQuery();
-        Command command;
-        while (resultSet.next()) {
-            command = (Command)applicationContext.getBean("command");
-            command.setId(resultSet.getInt("id"));
-            command.setName(resultSet.getString("name"));
-            command.setStatus(Command.Status.valueOf(resultSet.getString("status")));
-            commands.add(command);
+        try( ResultSet resultSet = selectStatement.executeQuery() ) {
+            Command command;
+            while (resultSet.next()) {
+                command = (Command)applicationContext.getBean("command");
+                command.setId(resultSet.getInt("id"));
+                command.setName(resultSet.getString("name"));
+                command.setStatus(Command.Status.valueOf(resultSet.getString("status")));
+                commands.add(command);
+            }
         }
         
         return commands;
@@ -51,19 +54,17 @@ public class CommandDAOImpl implements CommandDAO {
 
     @Override
     public void updateListToStatus(List<Command> commands, Command.Status status) throws SQLException {
-        try {
-            if (connection == null) {
-                throw new SQLException("You should lock rows for update first");
-            }
-            Statement updateStatement = connection.createStatement();
+        if (connection == null) {
+            throw new SQLException("You should lock rows for update first");
+        }
+
+        try (Statement updateStatement = connection.createStatement()) {
             updateStatement.executeUpdate(String.format(UPDATE_FORMAT,
                                                         status,
                                                         StringUtils.join(commands.toArray(), ",")));
             connection.commit();
         } finally {
-            if (connection != null) {
-                connection.close();
-            }
+            connection.close();
         }
     }
 
