@@ -15,6 +15,6 @@ public interface CommandDAO {
                                   "where status='%s' and id>%s limit %s for update";
     String UPDATE_FORMAT = "update commands set status='%s' where id in(%s)";
     
-    public List<Command> getListForUpdate(int maxSize) throws SQLException;
-    public void updateListToStatus(List<Command> commands, Command.Status status) throws SQLException;
+    List<Command> getListForUpdate(int maxSize) throws SQLException;
+    void updateListToStatus(List<Command> commands, Command.Status status) throws SQLException;
 }

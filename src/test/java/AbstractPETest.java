@@ -1,6 +1,7 @@
 import commands.BufferedUpdater;
 import commands.CommandScheduler;
 import commands.entities.ExecutionResult;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.junit.Before;
 import org.junit.Test;
