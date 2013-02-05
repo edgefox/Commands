@@ -55,7 +55,7 @@ public class CommandDAOImpl implements CommandDAO {
     @Override
     public void updateListToStatus(List<Command> commands, Command.Status status) throws SQLException {
         if (connection == null) {
-            throw new SQLException("You should lock rows for update first");
+            connection = dataSource.getConnection();
         }
 
         try (Statement updateStatement = connection.createStatement()) {
@@ -66,6 +66,16 @@ public class CommandDAOImpl implements CommandDAO {
         } finally {
             connection.close();
         }
+    }
+    
+    public void reset() {
+        if (connection != null) {
+            try {
+                connection.rollback();
+                connection.close();
+            } catch (SQLException ignored) {}
+        }
+        fromId.set(0);
     }
 
 }

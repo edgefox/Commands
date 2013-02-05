@@ -1,10 +1,10 @@
-package commands;
+package commands.service;
 
 import commands.entities.ExecutionResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -19,8 +19,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Date: 11/27/12
  * Time: 11:51 PM
  */
-@Component
-public class BufferedUpdater implements Runnable {
+@Service
+public class BufferedUpdaterImpl implements TimedBufferedUpdater {
     @Autowired
     private DataSource dataSource;
     private Connection connection;
@@ -28,6 +28,7 @@ public class BufferedUpdater implements Runnable {
     private Log logger;
     @Autowired
     private volatile LinkedBlockingQueue<ExecutionResult> updateQueue;
+    private Queue<ExecutionResult> resultList;
     @Autowired
     private ExecutionResult poisonResult;
     @Autowired
@@ -36,11 +37,12 @@ public class BufferedUpdater implements Runnable {
     private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
     private Timer timer;
 
-    public BufferedUpdater() {
+    public BufferedUpdaterImpl() {
         limit = 1000;
+        resultList = new LinkedList<>();
     }
     
-    public BufferedUpdater(int limit) {
+    public BufferedUpdaterImpl(int limit) {
         this.limit = limit;
     }
 
@@ -50,6 +52,7 @@ public class BufferedUpdater implements Runnable {
     }
     
     public void initTimer(int delay, int period) {
+        stopTimer();
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -74,13 +77,12 @@ public class BufferedUpdater implements Runnable {
     public void run() {
         try (Connection connection = dataSource.getConnection()) {
             this.connection = connection;
-            Queue<ExecutionResult> resultList = new LinkedList<>();
             ExecutionResult result;
             while (null != (result = updateQueue.take())) {
                 resultList.add(result);
                 limit--;
                 if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
-                    flushUpdate(resultList);
+                    flushUpdate();
                     if (result == poisonResult) {
                         logger.info("[BufferedUpdater] " + "Empty result detected. Flush and exit...");
                         timer.cancel();
@@ -93,7 +95,7 @@ public class BufferedUpdater implements Runnable {
         }
     }
 
-    public void flushUpdate(Queue<ExecutionResult> resultList) throws SQLException {
+    public void flushUpdate() throws SQLException {
         if (!resultList.isEmpty()) {
             try(Statement statement = connection.createStatement()) {
                 List<Integer> ids = new ArrayList<>();

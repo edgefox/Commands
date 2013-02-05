@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 @Component(value = "commandScheduler")
 @Scope(value = "prototype")
 public class CommandScheduler implements Runnable {
-    private static final int COMMAND_LIMIT = 100;
+    private static final int COMMAND_LIMIT = 200;
     @Autowired
     private CommandDAO commandDAO;
     @Autowired
@@ -34,7 +34,21 @@ public class CommandScheduler implements Runnable {
                 List<Command> commands;
                 commands = commandDAO.getListForUpdate(COMMAND_LIMIT);
                 if (commands.size() == 0) {
-                    return;
+                    logger.info("Nothing found - reseting");
+                    commandDAO.reset();
+                    int attemptsLeft = 2;
+                    while (attemptsLeft > 0) {
+                        commands = commandDAO.getListForUpdate(COMMAND_LIMIT);
+                        attemptsLeft--;
+                        if (commands.size() == 0) {
+                            commandDAO.reset();
+                            if (attemptsLeft == 0)
+                                return;
+                        } else {
+                            logger.info("Found");
+                            break;
+                        }
+                    }
                 }
                 commandDAO.updateListToStatus(commands, Command.Status.IN_PROGRESS);
                 for (Command command : commands) {
