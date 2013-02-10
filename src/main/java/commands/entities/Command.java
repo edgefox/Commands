@@ -60,13 +60,7 @@ public abstract class Command implements Runnable {
     }
 
     public static enum Status {
-        NEW("NEW"), IN_PROGRESS("IN_PROGRESS"), DONE("DONE");
-
-        private String value;
-
-        private Status(final String value) {
-            this.value = value;
-        }
+        NEW, IN_PROGRESS, DONE
     }
 
     public abstract void submitResult(ExecutionResult result);
