@@ -8,7 +8,6 @@
 
     <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
         <property name="driverClass" value="${c3p0.driverClass}" />
-        <property name="maxPoolSize" value="${c3p0.maxPoolSize}" />
         <property name="jdbcUrl" value="${c3p0.jdbcUrl}" />
         <property name="user" value="${c3p0.user}" />
         <property name="password" value="${c3p0.password}" />
@@ -22,7 +21,7 @@
     <bean id="executionPool" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool" />
     
     <bean id="updateQueue" class="java.util.concurrent.LinkedBlockingQueue">
-        <constructor-arg index="0" type="int" value="1000" />
+        <constructor-arg index="0" type="int" value="5000" />
     </bean>
     <bean class="commands.entities.ExecutionResult" id="poisonResult">
         <property name="id" value="-1000" />

@@ -36,6 +36,7 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
     private int limit;
     private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
     private Timer timer;
+    private int total = 0;
 
     public BufferedUpdaterImpl() {
         limit = 5000;
@@ -80,6 +81,7 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
             ExecutionResult result;
             while (null != (result = updateQueue.take())) {
                 resultList.add(result);
+                total++;
                 limit--;
                 if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
                     flushUpdate();

@@ -9,9 +9,12 @@ import org.springframework.context.ApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.*;
+
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * User: Ivan Lyutov
@@ -35,13 +38,14 @@ public abstract class AbstractPETest {
     private BufferedUpdater bufferedUpdater;
     @Autowired
     private DataSource dataSource;
+    private int toUpdate = 0;
 
     @Before
     public void setUp() {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             logger.info("Cleaning up the mess...");
-            statement.executeUpdate("update commands set status='NEW'");
+            toUpdate = statement.executeUpdate("update commands set status='NEW'");
         } catch (SQLException e) {
             logger.error(e.getMessage(), e);
         }
@@ -67,13 +71,33 @@ public abstract class AbstractPETest {
         schedulerPool.shutdown();
 
         try {
-            schedulerPool.awaitTermination(5, TimeUnit.SECONDS);
+            while(!schedulerPool.isTerminated()) {
+                schedulerPool.awaitTermination(5, TimeUnit.SECONDS);
+            }
             executionPool.shutdown();
-            executionPool.awaitTermination(5, TimeUnit.SECONDS);
+            while(!executionPool.isTerminated()) {
+                executionPool.awaitTermination(5, TimeUnit.SECONDS);
+            }
             updateQueue.put(poisonResult);
-            updaterPool.awaitTermination(5, TimeUnit.SECONDS);
+            while(!updaterPool.isTerminated()) {
+                updaterPool.awaitTermination(5, TimeUnit.SECONDS);
+            }
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
         }
+        
+        assertTrue(toUpdate == getDoneCount());
+    }
+
+    private int getDoneCount() throws SQLException {
+        int result = 0;
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select count(id) as count from commands where status='DONE'");
+            resultSet.next();
+            result = resultSet.getInt("count");
+        }
+
+        return result;
     }
 }

@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 @Component(value = "commandScheduler")
 @Scope(value = "prototype")
 public class CommandScheduler implements Runnable {
-    private static final int COMMAND_LIMIT = 200;
+    private static final int COMMAND_LIMIT = 500;
     @Autowired
     private CommandDAO commandDAO;
     @Autowired
