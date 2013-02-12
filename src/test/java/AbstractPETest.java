@@ -55,7 +55,7 @@ public abstract class AbstractPETest {
         ExecutorService updaterPool = Executors.newSingleThreadExecutor();
         updaterPool.execute(bufferedUpdater);
         updaterPool.shutdown();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             schedulerPool.execute((CommandScheduler)applicationContext.getBean("commandScheduler"));
         }
         schedulerPool.shutdown();
