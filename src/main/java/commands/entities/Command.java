@@ -75,6 +75,7 @@ public abstract class Command implements Runnable {
         return obj instanceof Command && ((Command) obj).getId() == getId();
     }
 
+    //Part of magic :)
     @Override
     public String toString() {
         return String.valueOf(getId());

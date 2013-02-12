@@ -1,13 +1,7 @@
-import com.jolbox.bonecp.BoneCPDataSource;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-import commands.dao.CommandDAO;
-import commands.service.BufferedUpdater;
 import commands.CommandScheduler;
 import commands.entities.ExecutionResult;
-
-import org.apache.commons.dbcp.BasicDataSource;
+import commands.service.BufferedUpdater;
 import org.apache.commons.logging.Log;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 12/24/12
  * Time: 12:32 PM
  */
-public class AbstractPETest {
+public abstract class AbstractPETest {
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -75,19 +69,5 @@ public class AbstractPETest {
         } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
         }
-/*        
-        if (dataSource instanceof BasicDataSource) {
-            ((BasicDataSource)dataSource).close();
-            return;
-        }
-
-        if (dataSource instanceof ComboPooledDataSource) {
-            ((ComboPooledDataSource)dataSource).close();
-            return;
-        }
-
-        if (dataSource instanceof BoneCPDataSource) {
-            ((BoneCPDataSource)dataSource).close();
-        }*/
     }
 }

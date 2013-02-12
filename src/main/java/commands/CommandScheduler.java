@@ -42,8 +42,9 @@ public class CommandScheduler implements Runnable {
                         attemptsLeft--;
                         if (commands.size() == 0) {
                             commandDAO.reset();
-                            if (attemptsLeft == 0)
+                            if (attemptsLeft == 0) {
                                 return;
+                            }
                         } else {
                             logger.info("Found");
                             break;
