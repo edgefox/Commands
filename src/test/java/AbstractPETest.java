@@ -11,10 +11,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * User: Ivan Lyutov
@@ -52,6 +49,15 @@ public abstract class AbstractPETest {
 
     @Test
     public void testCommands() throws SQLException {
+        ((ThreadPoolExecutor)executionPool).setRejectedExecutionHandler(new RejectedExecutionHandler() {
+            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+                try {
+                    executor.getQueue().put( r );
+                } catch (InterruptedException e) {
+                    
+                }
+            }
+        });
         ExecutorService updaterPool = Executors.newSingleThreadExecutor();
         updaterPool.execute(bufferedUpdater);
         updaterPool.shutdown();

@@ -6,6 +6,7 @@ import commands.service.TimedBufferedUpdater;
 import org.apache.commons.logging.Log;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -40,8 +38,7 @@ public class BufferedUpdaterTest {
     ExecutionResult poisonResult;
     @Autowired
     Log logger;
-
-
+    
     @Before
     public void setUp() {
         try (Connection connection = dataSource.getConnection()) {

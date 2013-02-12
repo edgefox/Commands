@@ -38,7 +38,7 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
     private Timer timer;
 
     public BufferedUpdaterImpl() {
-        limit = 1000;
+        limit = 5000;
         resultList = new LinkedList<>();
     }
     
