@@ -35,7 +35,6 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
     private int limit;
     private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
     private Timer timer;
-    private int total = 0;
     private static Log logger = LogFactory.getLog(BufferedUpdaterImpl.class);
 
     public BufferedUpdaterImpl() {
