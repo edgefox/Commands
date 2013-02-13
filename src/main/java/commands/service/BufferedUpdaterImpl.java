@@ -80,7 +80,6 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
             ExecutionResult result;
             while (null != (result = updateQueue.take())) {
                 resultList.add(result);
-                total++;
                 limit--;
                 if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
                     flushUpdate();
