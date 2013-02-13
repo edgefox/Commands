@@ -3,6 +3,8 @@ package commands.dao;
 import commands.entities.Command;
 import commands.entities.CommandOne;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
@@ -28,12 +30,14 @@ public class CommandDAOImpl implements CommandDAO {
     private DataSource dataSource;
     private Connection connection;
     private static AtomicInteger fromId = new AtomicInteger(0);
+    private static Log logger = LogFactory.getLog(CommandDAOImpl.class);
 
     @Override
     public List<Command> getListForUpdate(int maxSize) throws SQLException {
         List<Command> commands = new ArrayList<>();
         connection = dataSource.getConnection();
         connection.setAutoCommit(false);
+        
         PreparedStatement selectStatement = connection.prepareStatement(String.format(SELECT_FORMAT,
                                                                                       CommandOne.Status.NEW,
                                                                                       fromId.getAndAdd(maxSize),
@@ -48,6 +52,9 @@ public class CommandDAOImpl implements CommandDAO {
                 commands.add(command);
             }
         }
+        if (!commands.isEmpty()) {
+            logger.info("Acquired lock for range [" + commands.get(0) + " - " + commands.get(commands.size()-1) + "]" );
+        }
         
         return commands;
     }
@@ -59,10 +66,16 @@ public class CommandDAOImpl implements CommandDAO {
         }
 
         try (Statement updateStatement = connection.createStatement()) {
+            logger.info("Trying to update range " + 
+                        "[" + commands.get(0) + " - " + commands.get(commands.size()-1) + "]" + 
+                        " to status " + status );
             updateStatement.executeUpdate(String.format(UPDATE_FORMAT,
                                                         status,
                                                         StringUtils.join(commands.toArray(), ",")));
             connection.commit();
+            logger.info("Updated range " + 
+                        "[" + commands.get(0) + " - " + commands.get(commands.size()-1) + "]" + 
+                        " to " + status + ". Lock released." );
         } finally {
             connection.close();
         }

@@ -3,6 +3,7 @@ package commands;
 import commands.dao.CommandDAO;
 import commands.entities.Command;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -19,13 +20,12 @@ import java.util.concurrent.ExecutorService;
 @Component(value = "commandScheduler")
 @Scope(value = "prototype")
 public class CommandScheduler implements Runnable {
-    private static final int COMMAND_LIMIT = 500;
+    private static final int COMMAND_LIMIT = 300;
     @Autowired
     private CommandDAO commandDAO;
     @Autowired
     private ExecutorService executionPool;
-    @Autowired
-    private Log logger;
+    private static Log logger = LogFactory.getLog(CommandScheduler.class);
 
     @Override
     public void run() {

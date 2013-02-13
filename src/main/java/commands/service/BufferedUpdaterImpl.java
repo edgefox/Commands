@@ -3,6 +3,7 @@ package commands.service;
 import commands.entities.ExecutionResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +26,6 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
     private DataSource dataSource;
     private Connection connection;
     @Autowired
-    private Log logger;
-    @Autowired
     private volatile LinkedBlockingQueue<ExecutionResult> updateQueue;
     private Queue<ExecutionResult> resultList;
     @Autowired
@@ -37,9 +36,10 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
     private static final String FORMAT = "update commands set status='DONE' where id IN(%s)";
     private Timer timer;
     private int total = 0;
+    private static Log logger = LogFactory.getLog(BufferedUpdaterImpl.class);
 
     public BufferedUpdaterImpl() {
-        limit = 5000;
+        limit = 3000;
         resultList = new LinkedList<>();
     }
     
@@ -59,7 +59,7 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
             @Override
             public void run() {
                 try {
-                    logger.info("[BufferedUpdater] " + "Forcing update due to timeout");
+                    logger.info("Forcing update due to timeout");
                     updateQueue.put(forceUpdateResult);
                 } catch (InterruptedException e) {
                     logger.error(e.getMessage(), e);
@@ -86,7 +86,7 @@ public class BufferedUpdaterImpl implements TimedBufferedUpdater {
                 if (limit == 0 || result == poisonResult || result == forceUpdateResult) {
                     flushUpdate();
                     if (result == poisonResult) {
-                        logger.info("[BufferedUpdater] " + "Empty result detected. Flush and exit...");
+                        logger.info("Empty result detected. Flush and exit...");
                         timer.cancel();
                         return;
                     }

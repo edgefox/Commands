@@ -2,6 +2,7 @@ import commands.CommandScheduler;
 import commands.entities.ExecutionResult;
 import commands.service.BufferedUpdater;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,7 @@ import static junit.framework.TestCase.assertTrue;
 public abstract class AbstractPETest {
     @Autowired
     private ApplicationContext applicationContext;
-    @Autowired
-    private Log logger;
+    private Log logger = LogFactory.getLog(AbstractPETest.class);
     @Autowired
     private ExecutorService schedulerPool;
     @Autowired

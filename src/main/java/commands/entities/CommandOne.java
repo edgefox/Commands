@@ -1,6 +1,7 @@
 package commands.entities;
 
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
@@ -18,16 +19,14 @@ import java.util.concurrent.BlockingQueue;
 public class CommandOne extends Command {
     @Autowired
     private ApplicationContext applicationContext;
+    private Log logger = LogFactory.getLog(CommandOne.class);
 
     public CommandOne() {
     }
 
     @Override
     public void run() {
-        setLogger((Log)applicationContext.getBean("logger"));
         setUpdateQueue((BlockingQueue<ExecutionResult>)applicationContext.getBean("updateQueue"));
-        
-        getLogger().info("executing " + getName());
         setStatus(Status.DONE);
         submitResult(new ExecutionResult(getId(), getStatus().toString()));
     }
@@ -37,7 +36,7 @@ public class CommandOne extends Command {
         try {
             getUpdateQueue().put(result);
         } catch (InterruptedException e) {
-            getLogger().error(e.getMessage());
+            logger.error(e.getMessage(), e);
         }
     }
 }

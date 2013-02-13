@@ -1,6 +1,7 @@
 package commands.entities;
 
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.BlockingQueue;
 
@@ -13,7 +14,6 @@ public abstract class Command implements Runnable {
     private int id;
     private String name;
     private Status status;
-    private Log logger;
     private volatile BlockingQueue<ExecutionResult> updateQueue;
 
     public Command() {
@@ -35,10 +35,6 @@ public abstract class Command implements Runnable {
         return updateQueue;
     }
 
-    public Log getLogger() {
-        return logger;
-    }
-
     public void setId(int id) {
         this.id = id;
     }
@@ -53,10 +49,6 @@ public abstract class Command implements Runnable {
 
     public void setUpdateQueue(BlockingQueue<ExecutionResult> updateQueue) {
         this.updateQueue = updateQueue;
-    }
-
-    public void setLogger(Log logger) {
-        this.logger = logger;
     }
 
     public static enum Status {

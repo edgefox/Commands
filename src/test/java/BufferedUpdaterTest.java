@@ -1,6 +1,7 @@
 import commands.entities.ExecutionResult;
 import commands.service.TimedBufferedUpdater;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,8 +37,7 @@ public class BufferedUpdaterTest {
     DataSource dataSource;
     @Autowired
     ExecutionResult poisonResult;
-    @Autowired
-    Log logger;
+    Log logger = LogFactory.getLog(BufferedUpdaterTest.class);
     
     @Before
     public void setUp() {
